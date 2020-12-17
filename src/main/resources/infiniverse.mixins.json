@@ -1,0 +1,18 @@
+{
+	"required": true,
+	"package": "commoble.infiniverse.mixins",
+	"compatibilityLevel": "JAVA_8",
+	"refmap": "infiniverse.refmap.json",
+	"mixins": 
+	[
+		"MinecraftServerAccessor"
+	],
+	"client": 
+	[
+	],
+	"injectors": 
+	{
+		"defaultRequire": 1
+	},
+	"minVersion": "0.8"
+}
