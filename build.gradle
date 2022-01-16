@@ -1,37 +1,35 @@
 
 buildscript {
     repositories {
-        maven { url = 'https://files.minecraftforge.net/maven' }
+        maven { url = 'https://maven.minecraftforge.net' }
         jcenter()
         mavenCentral()
-        maven {url='https://repo.spongepowered.org/maven'}
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
-        classpath 'org.spongepowered:mixingradle:0.7-SNAPSHOT'
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
     }
 }
 apply plugin: 'net.minecraftforge.gradle'
 // Only edit below this line, the above code adds and enables the necessary things for Forge to be setup.
 apply plugin: 'eclipse'
 apply plugin: 'maven-publish'
+apply from: 'https://raw.githubusercontent.com/SizableShrimp/Forge-Class-Remapper/main/classremapper.gradle'
+apply plugin: 'java'
 
 version = "${mod_version}"
 group = "commoble.${modid}" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = "${modid}-${mc_version}"
 
-sourceCompatibility = targetCompatibility = compileJava.sourceCompatibility = compileJava.targetCompatibility = '1.8' // Need this here so eclipse task generates correctly.
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 minecraft {
-    mappings channel: 'snapshot', version: "${mappings_version}"    
-    // accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
+    mappings channel: 'official', version: "${mc_version}"
+    accessTransformer = file('src/main/resources/META-INF/accesstransformer.cfg')
     
     runs {
         client {
             workingDirectory project.file('run')
             property 'forge.logging.console.level', 'debug'
-			property 'mixin.env.disableRefMap', 'true'
-            arg "-mixin.config=infiniverse.mixins.json"
 
             mods {
                 infiniverse {
@@ -43,8 +41,6 @@ minecraft {
         server {
             workingDirectory project.file('run')
             property 'forge.logging.console.level', 'debug'
-			property 'mixin.env.disableRefMap', 'true'
-            arg "-mixin.config=infiniverse.mixins.json"
 
             mods {
                 infiniverse {
@@ -56,8 +52,6 @@ minecraft {
         data {
             workingDirectory project.file('run')
             property 'forge.logging.console.level', 'debug'
-			property 'mixin.env.disableRefMap', 'true'
-            arg "-mixin.config=infiniverse.mixins.json"
 
             args '--mod', 'infiniverse', '--all', '--output', file('src/generated/resources/')
 
@@ -71,26 +65,16 @@ minecraft {
 }
 
 repositories {
-    maven {
-        // location of the maven that hosts JEI files
-        name = "Progwml6 maven"
-        url = "https://dvs1.progwml6.com/files/maven/"
-    }
-    maven {
-        // location of a maven mirror for JEI files, as a fallback
-        name = "ModMaven"
-        url = "https://modmaven.k-4u.nl"
-  }
 }
 
 dependencies {
     minecraft "net.minecraftforge:forge:${mc_version}-${forge_version}"
-    
-	// compile against the JEI API but do not include it at runtime
-	// compileOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}:api")
-	// at runtime, use the full JEI jar
-	// runtimeOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}")
+}
 
+java
+{
+	withSourcesJar()
+	withJavadocJar()
 }
 
 // Example for how to get properties into the manifest for reading by the runtime..
@@ -103,33 +87,33 @@ jar {
             "Implementation-Title": project.name,
             "Implementation-Version": "${version}",
             "Implementation-Vendor" :"Commoble",
-            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ"),
-            "MixinConfigs": "${modid}.mixins.json"
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
         ])
     }
 }
 
-def reobfFile = file("$buildDir/reobfJar/output.jar")
-def reobfArtifact = artifacts.add('default', reobfFile) {
-    type 'jar'
-    builtBy 'reobfJar'
+artifacts {
+	archives javadocJar
+	archives sourcesJar
 }
 
+jar.finalizedBy('reobfJar') 
+
+// run "gradlew build publish" to build jars and generate a maven repo for them
+// run "gradlew build" to build the jars without mavening them
 publishing {
     publications {
         mavenJava(MavenPublication) {
+			artifactId project.archivesBaseName
             artifact jar
+			artifact sourcesJar
+			artifact javadocJar
         }
     }
     repositories {
         maven {
-            url "file:///${project.projectDir}/mcmodsrepo"
+			name="localMaven"
+            url "file:///${project.projectDir}/maven"
         }
     }
-}
-
-apply plugin: 'org.spongepowered.mixin'
-
-mixin {
-    add sourceSets.main, "${modid}.refmap.json"
 }
