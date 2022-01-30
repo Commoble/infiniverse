@@ -27,11 +27,17 @@ Be aware that sources and javadocs are not able to be provided via cursemaven.
 
 ## Using the API
 
+### InfiniverseAPI
+
 Dependant mods can use `commoble.infiniverse.api.InfiniverseAPI.get()` to get the Infiniverse API, which allows dimensions to be added or removed during server runtime.
 
 This should generally only be used for dimensions that need some sort of user input to determine how they should be created; static dimensions can be created using standard dimension jsons instead of using the Infiniverse API. <https://minecraft.fandom.com/wiki/Custom_dimension>
 
 For an example of a mod that uses the Infiniverse API, see Infiniverse Utils: <https://github.com/Commoble/infiniverse_utils>
+
+### UnregisterDimensionEvent
+
+Fired on the forge bus when a dimension/level is about to be unregistered and removed from the server. Not cancellable.
 
 ## Versioning Semantics
 

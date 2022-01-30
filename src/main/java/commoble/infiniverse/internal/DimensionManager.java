@@ -14,6 +14,7 @@ import com.ibm.icu.impl.locale.XCldrStub.ImmutableSet;
 import com.mojang.serialization.Lifecycle;
 
 import commoble.infiniverse.api.InfiniverseAPI;
+import commoble.infiniverse.api.UnregisterDimensionEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
@@ -206,6 +207,15 @@ public final class DimensionManager implements InfiniverseAPI
 
 		for (final ResourceKey<Level> levelKeyToRemove : keysToRemove)
 		{
+			final @Nullable ServerLevel levelToRemove = server.getLevel(levelKeyToRemove);
+			if (levelToRemove == null)
+				continue;
+			
+			UnregisterDimensionEvent unregisterDimensionEvent = new UnregisterDimensionEvent(levelToRemove);
+			MinecraftForge.EVENT_BUS.post(unregisterDimensionEvent);
+			if (unregisterDimensionEvent.isCanceled())
+				continue;
+			
 			// null if specified level not present
 			final @Nullable ServerLevel removedLevel = server.forgeGetWorldMap().remove(levelKeyToRemove);
 
