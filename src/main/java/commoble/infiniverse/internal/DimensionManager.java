@@ -5,9 +5,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.collect.Lists;
 import com.ibm.icu.impl.locale.XCldrStub.ImmutableSet;
@@ -16,8 +20,10 @@ import com.mojang.serialization.Lifecycle;
 import commoble.infiniverse.api.InfiniverseAPI;
 import commoble.infiniverse.api.UnregisterDimensionEvent;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Holder;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
+import net.minecraft.core.WritableRegistry;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -52,6 +58,7 @@ public final class DimensionManager implements InfiniverseAPI
 	 */
 	public static final DimensionManager INSTANCE = new DimensionManager();
 	
+	private static final Logger LOGGER = LogManager.getLogger();
 	private static final Set<ResourceKey<Level>> VANILLA_LEVELS = Set.of(Level.OVERWORLD, Level.NETHER, Level.END);
 	
 	private Set<ResourceKey<Level>> levelsPendingUnregistration = new HashSet<>();
@@ -142,7 +149,15 @@ public final class DimensionManager implements InfiniverseAPI
 		// then instantiate level, add border listener, add to map, fire world load event
 		
 		// register the actual dimension
-		worldGenSettings.dimensions().register(dimensionKey, dimension, Lifecycle.experimental());
+		Registry<LevelStem> dimensionRegistry = worldGenSettings.dimensions();
+		if (dimensionRegistry instanceof WritableRegistry<LevelStem> writableRegistry)
+		{
+			writableRegistry.register(dimensionKey, dimension, Lifecycle.stable());
+		}
+		else
+		{
+			throw new IllegalStateException(String.format("Unable to register dimension %s -- dimension registry not writable", dimensionKey.location()));
+		}
 
 		// create the level instance
 		final ServerLevel newLevel = new ServerLevel(
@@ -151,7 +166,7 @@ public final class DimensionManager implements InfiniverseAPI
 			anvilConverter,
 			derivedLevelData,
 			levelKey,
-			dimension.type(),
+			dimension.typeHolder(),
 			chunkProgressListener,
 			dimension.generator(),
 			worldGenSettings.isDebug(),
@@ -294,8 +309,8 @@ public final class DimensionManager implements InfiniverseAPI
 		{
 			// replace the old dimension registry with a new one containing the dimensions
 			// that weren't removed, in the same order
-			final MappedRegistry<LevelStem> oldRegistry = worldGenSettings.dimensions();
-			final MappedRegistry<LevelStem> newRegistry = new MappedRegistry<>(Registry.LEVEL_STEM_REGISTRY, oldRegistry.elementsLifecycle());
+			final Registry<LevelStem> oldRegistry = worldGenSettings.dimensions();
+			final MappedRegistry<LevelStem> newRegistry = new MappedRegistry<>(Registry.LEVEL_STEM_REGISTRY, oldRegistry.lifecycle(), (Function<LevelStem, Holder.Reference<LevelStem>>)null);
 
 			for (final var entry : oldRegistry.entrySet())
 			{
