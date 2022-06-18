@@ -166,9 +166,8 @@ public final class DimensionManager implements InfiniverseAPI
 			anvilConverter,
 			derivedLevelData,
 			levelKey,
-			dimension.typeHolder(),
+			dimension,
 			chunkProgressListener,
-			dimension.generator(),
 			worldGenSettings.isDebug(),
 			net.minecraft.world.level.biome.BiomeManager.obfuscateSeed(worldGenSettings.seed()),
 			List.of(), // "special spawn list"
