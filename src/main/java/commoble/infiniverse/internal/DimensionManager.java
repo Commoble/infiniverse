@@ -40,8 +40,8 @@ import net.minecraft.world.level.storage.WorldData;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
+import net.minecraftforge.event.level.LevelEvent;
 import net.minecraftforge.event.server.ServerStoppedEvent;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
 import net.minecraftforge.server.ServerLifecycleHooks;
@@ -191,7 +191,7 @@ public final class DimensionManager implements InfiniverseAPI
 		server.markWorldsDirty();
 
 		// fire world load event
-		MinecraftForge.EVENT_BUS.post(new WorldEvent.Load(newLevel));
+		MinecraftForge.EVENT_BUS.post(new LevelEvent.Load(newLevel));
 
 		// update clients' dimension lists
 		QuietPacketDistributors.sendToAll(InfiniverseMod.CHANNEL, new UpdateDimensionsPacket(Set.of(levelKey), true));
@@ -278,7 +278,7 @@ public final class DimensionManager implements InfiniverseAPI
 
 				// fire world unload event -- when the server stops, this would fire after
 				// worlds get saved, we'll do that here too
-				MinecraftForge.EVENT_BUS.post(new WorldEvent.Unload(removedLevel));
+				MinecraftForge.EVENT_BUS.post(new LevelEvent.Unload(removedLevel));
 
 				// remove the world border listener if possible
 				final WorldBorder overworldBorder = overworld.getWorldBorder();
