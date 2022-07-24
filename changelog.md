@@ -1,3 +1,6 @@
+## 1.0.0.4
+* Updated to forge version 41.0.110
+
 ## 1.0.0.3
 * Updated to 1.19
 
