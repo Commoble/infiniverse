@@ -1,11 +1,12 @@
 package commoble.infiniverse.internal;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 import javax.annotation.Nullable;
@@ -20,20 +21,23 @@ import com.mojang.serialization.Lifecycle;
 import commoble.infiniverse.api.InfiniverseAPI;
 import commoble.infiniverse.api.UnregisterDimensionEvent;
 import net.minecraft.core.BlockPos;
-import net.minecraft.core.Holder;
+import net.minecraft.core.LayeredRegistryAccess;
 import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
-import net.minecraft.core.WritableRegistry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.RegistryAccess.ImmutableRegistryAccess;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.RegistryLayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.progress.ChunkProgressListener;
+import net.minecraft.world.RandomSequences;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.border.BorderChangeListener;
 import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.storage.DerivedLevelData;
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
 import net.minecraft.world.level.storage.WorldData;
@@ -132,7 +136,7 @@ public final class DimensionManager implements InfiniverseAPI
 		final ServerLevel overworld = server.getLevel(Level.OVERWORLD);
 		
 		// dimension keys have a 1:1 relationship with level keys, they have the same IDs as well
-		final ResourceKey<LevelStem> dimensionKey = ResourceKey.create(Registry.LEVEL_STEM_REGISTRY, levelKey.location());
+		final ResourceKey<LevelStem> dimensionKey = ResourceKey.create(Registries.LEVEL_STEM, levelKey.location());
 		final LevelStem dimension = dimensionFactory.get();
 
 		// the int in create() here is radius of chunks to watch, 11 is what the server uses when it initializes levels
@@ -140,7 +144,6 @@ public final class DimensionManager implements InfiniverseAPI
 		final Executor executor = ReflectionBuddy.MinecraftServerAccess.executor.apply(server);
 		final LevelStorageAccess anvilConverter = ReflectionBuddy.MinecraftServerAccess.storageSource.apply(server);
 		final WorldData worldData = server.getWorldData();
-		final WorldGenSettings worldGenSettings = worldData.worldGenSettings();
 		final DerivedLevelData derivedLevelData = new DerivedLevelData(worldData, worldData.overworldData());
 		
 		// now we have everything we need to create the dimension and the level
@@ -149,9 +152,10 @@ public final class DimensionManager implements InfiniverseAPI
 		// then instantiate level, add border listener, add to map, fire world load event
 		
 		// register the actual dimension
-		Registry<LevelStem> dimensionRegistry = worldGenSettings.dimensions();
-		if (dimensionRegistry instanceof WritableRegistry<LevelStem> writableRegistry)
+		Registry<LevelStem> dimensionRegistry = server.registryAccess().registryOrThrow(Registries.LEVEL_STEM);
+		if (dimensionRegistry instanceof MappedRegistry<LevelStem> writableRegistry)
 		{
+			writableRegistry.unfreeze();
 			writableRegistry.register(dimensionKey, dimension, Lifecycle.stable());
 		}
 		else
@@ -168,14 +172,15 @@ public final class DimensionManager implements InfiniverseAPI
 			levelKey,
 			dimension,
 			chunkProgressListener,
-			worldGenSettings.isDebug(),
-			net.minecraft.world.level.biome.BiomeManager.obfuscateSeed(worldGenSettings.seed()),
+			worldData.isDebugWorld(),
+			overworld.getSeed(), // don't need to call BiomeManager#obfuscateSeed, overworld seed is already obfuscated
 			List.of(), // "special spawn list"
 				// phantoms, travelling traders, patrolling/sieging raiders, and cats are overworld special spawns
 				// this is always empty for non-overworld dimensions (including json dimensions)
 				// these spawners are ticked when the world ticks to do their spawning logic,
 				// mods that need "special spawns" for their own dimensions should implement them via tick events or other systems
-			false // "tick time", true for overworld, always false for nether, end, and json dimensions
+			false, // "tick time", true for overworld, always false for nether, end, and json dimensions
+			(RandomSequences)null // as of 1.20.1 this argument is always null in vanilla, indicating the level should load the sequence from storage
 			);
 		
 		// add world border listener, for parity with json dimensions
@@ -199,6 +204,7 @@ public final class DimensionManager implements InfiniverseAPI
 		return newLevel;
 	}
 	
+	@SuppressWarnings("deprecation")
 	private void unregisterScheduledDimensions(final MinecraftServer server)
 	{
 		if (this.levelsPendingUnregistration.isEmpty())
@@ -215,7 +221,20 @@ public final class DimensionManager implements InfiniverseAPI
 		// the dimension registry has five sub-collections that need to be cleaned up
 		// we should also eject players from removed worlds so they don't get stuck there
 
-		final WorldGenSettings worldGenSettings = server.getWorldData().worldGenSettings();
+		final Registry<LevelStem> oldRegistry = server.registryAccess().registryOrThrow(Registries.LEVEL_STEM);
+		if (!(oldRegistry instanceof MappedRegistry<LevelStem> oldMappedRegistry))
+		{
+			LOGGER.warn("Cannot unload dimensions: dimension registry not an instance of MappedRegistry. There may be another mod causing incompatibility with Infiniverse, or Infiniverse may need to be updated for your version of forge/minecraft.");
+			return;
+		}
+		LayeredRegistryAccess<RegistryLayer> layeredRegistryAccess = ReflectionBuddy.MinecraftServerAccess.registries.apply(server);
+		RegistryAccess.Frozen composite = ReflectionBuddy.LayeredRegistryAccessAccess.composite.apply(layeredRegistryAccess);
+		if (!(composite instanceof ImmutableRegistryAccess immutableRegistryAccess))
+		{
+			LOGGER.warn("Cannot unload dimensions: composite registry not an instance of ImmutableRegistryAccess. There may be another mod causing incompatibility with Infiniverse, or Infiniverse may be updated for your version of forge/minecraft.");
+			return;
+		}
+		
 		final Set<ResourceKey<Level>> removedLevelKeys = new HashSet<>();
 		final ServerLevel overworld = server.getLevel(Level.OVERWORLD);
 
@@ -308,13 +327,12 @@ public final class DimensionManager implements InfiniverseAPI
 		{
 			// replace the old dimension registry with a new one containing the dimensions
 			// that weren't removed, in the same order
-			final Registry<LevelStem> oldRegistry = worldGenSettings.dimensions();
-			final MappedRegistry<LevelStem> newRegistry = new MappedRegistry<>(Registry.LEVEL_STEM_REGISTRY, oldRegistry.lifecycle(), (Function<LevelStem, Holder.Reference<LevelStem>>)null);
+			final MappedRegistry<LevelStem> newRegistry = new MappedRegistry<>(Registries.LEVEL_STEM, oldMappedRegistry.registryLifecycle());
 
 			for (final var entry : oldRegistry.entrySet())
 			{
 				final ResourceKey<LevelStem> oldKey = entry.getKey();
-				final ResourceKey<Level> oldLevelKey = ResourceKey.create(Registry.DIMENSION_REGISTRY, oldKey.location());
+				final ResourceKey<Level> oldLevelKey = ResourceKey.create(Registries.DIMENSION, oldKey.location());
 				final LevelStem dimension = entry.getValue();
 				if (oldKey != null && dimension != null && !removedLevelKeys.contains(oldLevelKey))
 				{
@@ -323,8 +341,37 @@ public final class DimensionManager implements InfiniverseAPI
 			}
 
 			// then replace the old registry with the new registry
-			ReflectionBuddy.WorldGenSettingsAccess.dimensions.set(worldGenSettings, newRegistry);
-
+			// as of 1.20.1 the dimension registry is stored in the server's layered registryaccess
+			// this has several immutable collections of sub-registryaccesses,
+			// so we'll need to recreate each of them.
+			
+			// Each ServerLevel has a reference to the layered registry access's *composite* registry access
+			// so we should edit the internal fields where possible (instead of reconstructing the registry accesses)
+			
+			List<RegistryAccess.Frozen> newRegistryAccessList = new ArrayList<>();
+			for (RegistryLayer layer : RegistryLayer.values())
+			{
+				if (layer == RegistryLayer.DIMENSIONS)
+				{
+					newRegistryAccessList.add(new RegistryAccess.ImmutableRegistryAccess(List.of(newRegistry)).freeze());
+				}
+				else
+				{
+					newRegistryAccessList.add(layeredRegistryAccess.getLayer(layer));
+				}
+			}
+			Map<ResourceKey<? extends Registry<?>>, Registry<?>> newRegistryMap = new HashMap<>();
+			for (var registryAccess : newRegistryAccessList)
+			{
+				var registries = registryAccess.registries().toList();
+				for (var registryEntry : registries)
+				{
+					newRegistryMap.put(registryEntry.key(), registryEntry.value());					
+				}
+			}
+			ReflectionBuddy.LayeredRegistryAccessAccess.values.set(layeredRegistryAccess, List.copyOf(newRegistryAccessList));
+			ReflectionBuddy.ImmutableRegistryAccessAccess.registries.set(immutableRegistryAccess, newRegistryMap);
+			
 			// update the server's levels so dead levels don't get ticked
 			server.markWorldsDirty();
 			

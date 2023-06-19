@@ -1,3 +1,6 @@
+## 1.0.0.5
+* Updated to minecraft 1.20.1
+
 ## 1.0.0.4
 * Updated to forge version 41.0.110
 

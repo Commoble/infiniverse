@@ -2,12 +2,19 @@ package commoble.infiniverse.internal;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
+import net.minecraft.core.LayeredRegistryAccess;
 import net.minecraft.core.MappedRegistry;
+import net.minecraft.core.Registry;
+import net.minecraft.core.RegistryAccess;
+import net.minecraft.core.RegistryAccess.ImmutableRegistryAccess;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.RegistryLayer;
 import net.minecraft.server.level.progress.ChunkProgressListenerFactory;
 import net.minecraft.world.level.border.BorderChangeListener;
 import net.minecraft.world.level.border.WorldBorder;
@@ -115,6 +122,8 @@ public class ReflectionBuddy
 			getInstanceFieldGetter(MinecraftServer.class, "f_129738_");
 		public static final Function<MinecraftServer, LevelStorageAccess> storageSource =
 			getInstanceFieldGetter(MinecraftServer.class, "f_129744_");
+		public static final Function<MinecraftServer, LayeredRegistryAccess<RegistryLayer>> registries =
+			getInstanceFieldGetter(MinecraftServer.class, "f_244176_");
 	}
 
 	public static class WorldBorderAccess
@@ -129,9 +138,19 @@ public class ReflectionBuddy
 			getInstanceFieldGetter(BorderChangeListener.DelegateBorderChangeListener.class, "f_61864_");
 	}
 	
-	public static class WorldGenSettingsAccess
+	public static class LayeredRegistryAccessAccess
 	{
-		public static final MutableInstanceField<WorldGenSettings, MappedRegistry<LevelStem>> dimensions =
-			getInstanceField(WorldGenSettings.class, "f_64605_");
+		@SuppressWarnings("rawtypes")
+		public static final MutableInstanceField<LayeredRegistryAccess, List<RegistryAccess.Frozen>> values =
+			getInstanceField(LayeredRegistryAccess.class, "f_244050_");
+		@SuppressWarnings("rawtypes")
+		public static final Function<LayeredRegistryAccess, RegistryAccess.Frozen> composite =
+			getInstanceFieldGetter(LayeredRegistryAccess.class, "f_244063_");
+	}
+	
+	public static class ImmutableRegistryAccessAccess
+	{
+		public static final MutableInstanceField<ImmutableRegistryAccess, Map<? extends ResourceKey<? extends Registry<?>>, ? extends Registry<?>>> registries =
+			getInstanceField(ImmutableRegistryAccess.class, "f_206223_");
 	}
 }
