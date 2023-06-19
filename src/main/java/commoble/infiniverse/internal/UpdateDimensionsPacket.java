@@ -7,7 +7,7 @@ import java.util.function.Supplier;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
-import net.minecraft.core.Registry;
+import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
@@ -23,7 +23,7 @@ public record UpdateDimensionsPacket(Set<ResourceKey<Level>> keys, boolean add)
 {
 	public static UpdateDimensionsPacket read(FriendlyByteBuf buffer)
 	{
-		Set<ResourceKey<Level>> keys = buffer.readCollection(i->new HashSet<>(), buf->ResourceKey.create(Registry.DIMENSION_REGISTRY, buf.readResourceLocation()));
+		Set<ResourceKey<Level>> keys = buffer.readCollection(i->new HashSet<>(), buf->ResourceKey.create(Registries.DIMENSION, buf.readResourceLocation()));
 		boolean add = buffer.readBoolean();
 		
 		return new UpdateDimensionsPacket(keys,add);

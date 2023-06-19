@@ -1,0 +1,13 @@
+modLoader="javafml" #mandatory
+loaderVersion="[1,)" #mandatory This is typically bumped every Minecraft version by Forge. See our download page for lists of versions.
+license="MIT License"
+[[mods]] #mandatory
+modId="infiniverse_examplemod" #mandatory
+version="${file.jarVersion}" #mandatory
+displayName="Infiniverse Example Mod" #mandatory
+authors="Commoble"
+# The description text for the mod (multi line!) (#mandatory)
+description='''
+The description text for the mod (multi line!) (mandatory)
+'''
+
