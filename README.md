@@ -2,7 +2,9 @@ Infiniverse is an API mod for Minecraft Forge that allows other mods to add and 
 
 Infiniverse is primarily a server mod and not required on clients (it is also compatible with vanilla clients). However, if the Infiniverse mod is present on your client, any new/removed dimensions will be immediately available in command suggestions for commands that take dimensions as arguments (such as `/execute in`). If Infiniverse is not present on your client, you will need to log out of the server and log in for these changes to be visible in command suggestions.
 
-Built mod jars are available here: <https://www.curseforge.com/minecraft/mc-mods/infiniverse>
+Built mod jars are available here:
+<https://www.curseforge.com/minecraft/mc-mods/infiniverse>
+<https://modrinth.com/mod/infiniverse>
 
 ## Dependency Setup
 
