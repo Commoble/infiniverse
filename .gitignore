@@ -23,8 +23,5 @@ run
 runs
 run-data
 maven
-logs
 
 repo
-/.apt_generated/
-/.apt_generated_tests/

@@ -1,9 +1,9 @@
 package commoble.infiniverse.internal;
 
-import net.minecraftforge.network.NetworkDirection;
-import net.minecraftforge.network.PacketDistributor;
-import net.minecraftforge.network.simple.SimpleChannel;
-import net.minecraftforge.server.ServerLifecycleHooks;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.neoforged.neoforge.network.PlayNetworkDirection;
+import net.neoforged.neoforge.network.simple.SimpleChannel;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 /**
  * Packet distributors and helpers for sending packets only to players who have the channel
@@ -22,7 +22,7 @@ public final class QuietPacketDistributors
 			.stream()
 			.filter(player -> channelGetter.get().isRemotePresent(player.connection.connection))
 			.forEach(player -> player.connection.connection.send(packet)),
-		NetworkDirection.PLAY_TO_CLIENT);
+		PlayNetworkDirection.PLAY_TO_CLIENT);
 
 	public static <PACKET> void sendToAll(SimpleChannel channel, PACKET packet)
 	{

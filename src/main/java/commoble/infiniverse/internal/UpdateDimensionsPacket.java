@@ -3,7 +3,6 @@ package commoble.infiniverse.internal;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
@@ -11,9 +10,9 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.level.Level;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.fml.loading.FMLEnvironment;
-import net.minecraftforge.network.NetworkEvent;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.fml.loading.FMLEnvironment;
+import net.neoforged.neoforge.network.NetworkEvent;
 
 /**
  * @param keys Keys to add or remove in the client's dimension list
@@ -35,9 +34,8 @@ public record UpdateDimensionsPacket(Set<ResourceKey<Level>> keys, boolean add)
 		buffer.writeBoolean(this.add());
 	}
 	
-	public void handle(Supplier<NetworkEvent.Context> contextGetter)
+	public void handle(NetworkEvent.Context context)
 	{
-		NetworkEvent.Context context = contextGetter.get();
 		if (FMLEnvironment.dist == Dist.CLIENT)
 		{
 			context.enqueueWork(() -> ClientHandler.handle(this));

@@ -1,13 +1,14 @@
 package commoble.infiniverse.api;
 
 import net.minecraft.server.level.ServerLevel;
-import net.minecraftforge.eventbus.api.Event;
+import net.neoforged.bus.api.Event;
+import net.neoforged.bus.api.ICancellableEvent;
 
 /**
  * Fires when a dimension/level is about to be unregistered by Infiniverse.<br>
  * This event fires on {@link net.minecraftforge.common.MinecraftForge#EVENT_BUS} and is not cancellable.<br>
  */
-public class UnregisterDimensionEvent extends Event
+public class UnregisterDimensionEvent extends Event implements ICancellableEvent
 {
 	private final ServerLevel level;
 	

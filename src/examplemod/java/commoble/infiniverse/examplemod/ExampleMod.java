@@ -21,9 +21,9 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.RegisterCommandsEvent;
-import net.minecraftforge.fml.common.Mod;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 @Mod(ExampleMod.MODID)
 public class ExampleMod
@@ -33,7 +33,7 @@ public class ExampleMod
 	
 	public ExampleMod()
 	{
-		MinecraftForge.EVENT_BUS.addListener(this::onRegisterCommands);
+		NeoForge.EVENT_BUS.addListener(this::onRegisterCommands);
 	}
 	
 	void onRegisterCommands(RegisterCommandsEvent event)

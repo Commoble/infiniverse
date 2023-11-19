@@ -3,12 +3,10 @@ package commoble.infiniverse.internal;
 import java.util.function.Predicate;
 
 import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.fml.IExtensionPoint.DisplayTest;
-import net.minecraftforge.fml.ModLoadingContext;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.network.NetworkConstants;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.simple.SimpleChannel;
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.network.NetworkRegistry;
+import net.neoforged.neoforge.network.simple.SimpleChannel;
 
 @Mod(InfiniverseMod.MODID)
 public final class InfiniverseMod
@@ -27,16 +25,10 @@ public final class InfiniverseMod
 		NETWORK_TEST);
 	
 	// constructor is invoked by forge at start of modloading due to @Mod
-	public InfiniverseMod()
-	{
-		// mod is not required to be on both sides, greenlight mismatched servers in client's server list
-		ModLoadingContext.get().registerExtensionPoint(DisplayTest.class,
-			() -> new DisplayTest(
-				() -> NetworkConstants.IGNORESERVERONLY,
-				(s, networkBool) -> true));
-		
+	public InfiniverseMod(IEventBus modBus)
+	{		
 		int packetID = 0;
-		CHANNEL.registerMessage(packetID++, UpdateDimensionsPacket.class,
+		CHANNEL.<UpdateDimensionsPacket>registerMessage(packetID++, UpdateDimensionsPacket.class,
 			UpdateDimensionsPacket::write,
 			UpdateDimensionsPacket::read,
 			UpdateDimensionsPacket::handle);

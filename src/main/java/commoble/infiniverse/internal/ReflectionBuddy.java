@@ -8,7 +8,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import net.minecraft.core.LayeredRegistryAccess;
-import net.minecraft.core.MappedRegistry;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.RegistryAccess.ImmutableRegistryAccess;
@@ -18,13 +17,11 @@ import net.minecraft.server.RegistryLayer;
 import net.minecraft.server.level.progress.ChunkProgressListenerFactory;
 import net.minecraft.world.level.border.BorderChangeListener;
 import net.minecraft.world.level.border.WorldBorder;
-import net.minecraft.world.level.dimension.LevelStem;
-import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
-import net.minecraftforge.fml.util.ObfuscationReflectionHelper;
+import net.neoforged.fml.util.ObfuscationReflectionHelper;
 
 public class ReflectionBuddy
-{
+{	
 	/**
 	 * Gets a getter-like object for a reflective field. Only to be used for obfuscatable vanilla minecraft fields
 	 * @param <FIELDHOLDER> The type of the object containing the field
@@ -35,7 +32,6 @@ public class ReflectionBuddy
 	 */
 	public static <FIELDHOLDER,FIELDTYPE> Function<FIELDHOLDER,FIELDTYPE> getInstanceFieldGetter(Class<FIELDHOLDER> fieldHolderClass, String fieldName)
 	{
-		// forge's ORH is needed to reflect into vanilla minecraft java
 		Field field = ObfuscationReflectionHelper.findField(fieldHolderClass, fieldName);
 		return getInstanceFieldGetter(field);
 	}
@@ -117,40 +113,40 @@ public class ReflectionBuddy
 			// it also lets us define the private-field-getting-shenanigans in the same class we're using them
 			// it also doesn't need any extra resources or buildscript stuff, which makes this example simpler to describe
 		public static final Function<MinecraftServer, ChunkProgressListenerFactory> progressListenerFactory =
-			getInstanceFieldGetter(MinecraftServer.class, "f_129756_");
+			getInstanceFieldGetter(MinecraftServer.class, "progressListenerFactory");
 		public static final Function<MinecraftServer, Executor> executor =
-			getInstanceFieldGetter(MinecraftServer.class, "f_129738_");
+			getInstanceFieldGetter(MinecraftServer.class, "executor");
 		public static final Function<MinecraftServer, LevelStorageAccess> storageSource =
-			getInstanceFieldGetter(MinecraftServer.class, "f_129744_");
+			getInstanceFieldGetter(MinecraftServer.class, "storageSource");
 		public static final Function<MinecraftServer, LayeredRegistryAccess<RegistryLayer>> registries =
-			getInstanceFieldGetter(MinecraftServer.class, "f_244176_");
+			getInstanceFieldGetter(MinecraftServer.class, "registries");
 	}
 
 	public static class WorldBorderAccess
 	{
 		public static final Function<WorldBorder, List<BorderChangeListener>> listeners =
-			getInstanceFieldGetter(WorldBorder.class, "f_61905_");
+			getInstanceFieldGetter(WorldBorder.class, "listeners");
 	}
 
 	public static class DelegateBorderChangeListenerAccess
 	{
 		public static final Function<BorderChangeListener.DelegateBorderChangeListener, WorldBorder> worldBorder =
-			getInstanceFieldGetter(BorderChangeListener.DelegateBorderChangeListener.class, "f_61864_");
+			getInstanceFieldGetter(BorderChangeListener.DelegateBorderChangeListener.class, "worldBorder");
 	}
 	
 	public static class LayeredRegistryAccessAccess
 	{
 		@SuppressWarnings("rawtypes")
 		public static final MutableInstanceField<LayeredRegistryAccess, List<RegistryAccess.Frozen>> values =
-			getInstanceField(LayeredRegistryAccess.class, "f_244050_");
+			getInstanceField(LayeredRegistryAccess.class, "values");
 		@SuppressWarnings("rawtypes")
 		public static final Function<LayeredRegistryAccess, RegistryAccess.Frozen> composite =
-			getInstanceFieldGetter(LayeredRegistryAccess.class, "f_244063_");
+			getInstanceFieldGetter(LayeredRegistryAccess.class, "composite");
 	}
 	
 	public static class ImmutableRegistryAccessAccess
 	{
 		public static final MutableInstanceField<ImmutableRegistryAccess, Map<? extends ResourceKey<? extends Registry<?>>, ? extends Registry<?>>> registries =
-			getInstanceField(ImmutableRegistryAccess.class, "f_206223_");
+			getInstanceField(ImmutableRegistryAccess.class, "registries");
 	}
 }

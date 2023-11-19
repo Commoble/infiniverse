@@ -41,14 +41,14 @@ import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.storage.DerivedLevelData;
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
 import net.minecraft.world.level.storage.WorldData;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.TickEvent.ServerTickEvent;
-import net.minecraftforge.event.level.LevelEvent;
-import net.minecraftforge.event.server.ServerStoppedEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod.EventBusSubscriber;
-import net.minecraftforge.server.ServerLifecycleHooks;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.Mod.EventBusSubscriber;
+import net.neoforged.neoforge.common.NeoForge;
+import net.neoforged.neoforge.event.TickEvent;
+import net.neoforged.neoforge.event.TickEvent.ServerTickEvent;
+import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.neoforge.event.server.ServerStoppedEvent;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 /**
  * InfiniverseAPI internal implementation
@@ -196,7 +196,7 @@ public final class DimensionManager implements InfiniverseAPI
 		server.markWorldsDirty();
 
 		// fire world load event
-		MinecraftForge.EVENT_BUS.post(new LevelEvent.Load(newLevel));
+		NeoForge.EVENT_BUS.post(new LevelEvent.Load(newLevel));
 
 		// update clients' dimension lists
 		QuietPacketDistributors.sendToAll(InfiniverseMod.CHANNEL, new UpdateDimensionsPacket(Set.of(levelKey), true));
@@ -245,7 +245,7 @@ public final class DimensionManager implements InfiniverseAPI
 				continue;
 			
 			UnregisterDimensionEvent unregisterDimensionEvent = new UnregisterDimensionEvent(levelToRemove);
-			MinecraftForge.EVENT_BUS.post(unregisterDimensionEvent);
+			NeoForge.EVENT_BUS.post(unregisterDimensionEvent);
 			if (unregisterDimensionEvent.isCanceled())
 				continue;
 			
@@ -297,7 +297,7 @@ public final class DimensionManager implements InfiniverseAPI
 
 				// fire world unload event -- when the server stops, this would fire after
 				// worlds get saved, we'll do that here too
-				MinecraftForge.EVENT_BUS.post(new LevelEvent.Unload(removedLevel));
+				NeoForge.EVENT_BUS.post(new LevelEvent.Unload(removedLevel));
 
 				// remove the world border listener if possible
 				final WorldBorder overworldBorder = overworld.getWorldBorder();
