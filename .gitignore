@@ -20,10 +20,11 @@ build
 # other
 eclipse
 run
+runs
+run-data
 maven
 logs
 
-# Files from Forge MDK
-forge*changelog.txt
+repo
 /.apt_generated/
 /.apt_generated_tests/

@@ -1,3 +1,6 @@
+## 2.0.0.0
+* Now uses the neoforge modloader instead of forge
+
 ## 1.0.0.5
 * Updated to minecraft 1.20.1
 
