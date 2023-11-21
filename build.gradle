@@ -57,7 +57,7 @@ repositories {
 
 dependencies {
 	implementation "net.neoforged:neoforge:${neo_version}"
-	examplemod "net.neoforged:neoforge:${neo_version}"
+	examplemodImplementation "net.neoforged:neoforge:${neo_version}"
 }
 
 // Example for how to get properties into the manifest for reading by the runtime..
