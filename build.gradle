@@ -18,14 +18,9 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 sourceSets
 {
-	main.resources {srcDir 'src/generated/resources'}
-	examplemod {java {srcDir "src/examplemod/java"} resources {srcDir "src/examplemod/resources"}}
-	test {java {srcDir "src/test/java"} resources {srcDir "src/test/resources"}}
-}
-
-configurations {
-	examplemodCompileClasspath.extendsFrom compileClassPath
-	examplemodRuntimeClasspath.extendsFrom runtimeClasspath
+	main
+	examplemod
+	test
 }
 
 //minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
@@ -62,6 +57,7 @@ repositories {
 
 dependencies {
 	implementation "net.neoforged:neoforge:${neo_version}"
+	examplemod "net.neoforged:neoforge:${neo_version}"
 }
 
 // Example for how to get properties into the manifest for reading by the runtime..
