@@ -23,7 +23,7 @@ sourceSets
 	test {java {srcDir "src/test/java"} resources {srcDir "src/test/resources"}}
 }
 
-configuration {
+configurations {
 	examplemodCompileClasspath.extendsFrom compileClassPath
 	examplemodRuntimeClasspath.extendsFrom runtimeClasspath
 }
