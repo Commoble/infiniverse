@@ -18,9 +18,9 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 sourceSets
 {
-	main
-	examplemod
-	test
+	main.resources {srcDir 'src/generated/resources'}
+	examplemod {java {srcDir "src/examplemod/java"} resources {srcDir "src/examplemod/resources"}}
+	test {java {srcDir "src/test/java"} resources {srcDir "src/test/resources"}}
 }
 
 //minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
