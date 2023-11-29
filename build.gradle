@@ -19,7 +19,7 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 sourceSets
 {
 	main
-	examplemod
+	examplemod { runs { modIdentifier "infiniverse_examplemod" }}
 	test
 }
 
