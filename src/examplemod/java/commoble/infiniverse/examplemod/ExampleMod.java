@@ -1,10 +1,11 @@
 package commoble.infiniverse.examplemod;
 
 import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.serialization.DynamicOps;
 
 import commoble.infiniverse.api.InfiniverseAPI;
-import net.minecraft.commands.CommandRuntimeException;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.Holder;
@@ -45,9 +46,14 @@ public class ExampleMod
 				.executes(this::removeDimension)));
 	}
 	
-	int createDimension(CommandContext<CommandSourceStack> context)
+	int createDimension(CommandContext<CommandSourceStack> context) throws CommandSyntaxException
 	{
-		InfiniverseAPI.get().getOrCreateLevel(context.getSource().getServer(), LEVEL_KEY, () -> createLevel(context.getSource().getServer()));
+		try {
+			InfiniverseAPI.get().getOrCreateLevel(context.getSource().getServer(), LEVEL_KEY, () -> createLevel(context.getSource().getServer()));
+		}
+		catch (Exception e) {
+			throw new SimpleCommandExceptionType(Component.literal(e.getMessage())).create();
+		}
 		
 		return 1;
 	}
@@ -68,7 +74,7 @@ public class ExampleMod
 			.flatMap(nbt -> ChunkGenerator.CODEC.parse(ops, nbt))
 			.getOrThrow(false, s ->
 			{
-				throw new CommandRuntimeException(Component.literal(String.format("Error copying dimension: %s", s)));			
+				throw new RuntimeException(String.format("Error copying dimension: {}", s));
 			});
 		Holder<DimensionType> typeHolder = oldLevel.dimensionTypeRegistration();
 		return new LevelStem(typeHolder, newChunkGenerator);
