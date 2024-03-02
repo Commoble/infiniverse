@@ -6,7 +6,7 @@ import net.neoforged.bus.api.ICancellableEvent;
 
 /**
  * Fires when a dimension/level is about to be unregistered by Infiniverse.<br>
- * This event fires on {@link net.minecraftforge.common.MinecraftForge#EVENT_BUS} and is not cancellable.<br>
+ * This event fires on {@link net.neoforged.neoforge.common.NeoForge#EVENT_BUS} and is not cancellable.<br>
  */
 public class UnregisterDimensionEvent extends Event implements ICancellableEvent
 {
