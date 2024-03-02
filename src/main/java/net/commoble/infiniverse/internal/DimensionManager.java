@@ -1,4 +1,4 @@
-package commoble.infiniverse.internal;
+package net.commoble.infiniverse.internal;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,8 +18,8 @@ import com.google.common.collect.Lists;
 import com.ibm.icu.impl.locale.XCldrStub.ImmutableSet;
 import com.mojang.serialization.Lifecycle;
 
-import commoble.infiniverse.api.InfiniverseAPI;
-import commoble.infiniverse.api.UnregisterDimensionEvent;
+import net.commoble.infiniverse.api.InfiniverseAPI;
+import net.commoble.infiniverse.api.UnregisterDimensionEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.LayeredRegistryAccess;
 import net.minecraft.core.MappedRegistry;

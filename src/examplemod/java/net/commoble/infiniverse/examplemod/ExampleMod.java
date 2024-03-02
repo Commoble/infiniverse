@@ -1,11 +1,11 @@
-package commoble.infiniverse.examplemod;
+package net.commoble.infiniverse.examplemod;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import com.mojang.serialization.DynamicOps;
 
-import commoble.infiniverse.api.InfiniverseAPI;
+import net.commoble.infiniverse.api.InfiniverseAPI;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
 import net.minecraft.core.Holder;

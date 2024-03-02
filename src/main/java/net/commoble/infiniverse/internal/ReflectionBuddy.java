@@ -1,4 +1,4 @@
-package commoble.infiniverse.internal;
+package net.commoble.infiniverse.internal;
 
 import java.lang.reflect.Field;
 import java.util.List;

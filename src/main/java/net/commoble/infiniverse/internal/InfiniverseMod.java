@@ -1,4 +1,4 @@
-package commoble.infiniverse.internal;
+package net.commoble.infiniverse.internal;
 
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;

@@ -1,5 +1,6 @@
 ## 2.0.0.0
 * Now uses the neoforge modloader instead of forge
+* Moved all packages from commoble to net.commoble package
 * Unregistering a dimension now saves the level and its chunks
 * Dimension unregistering at end of server tick now happens at LOWEST event priority
 

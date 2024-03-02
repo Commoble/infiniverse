@@ -12,16 +12,16 @@ To use infiniverse in your mod's development environment with full sources and j
 
 ```gradle
 repositories {
-	maven { url "https://cubicinterpolation.net/maven/" }
+	maven { url "https://commoble.net/maven/" }
 }
 
 dependencies {
-	implementation fg.deobf("commoble.infiniverse:${infiniverse_branch}:${infiniverse_version}")
+	implementation fg.deobf("net.commoble.infiniverse:${infiniverse_branch}:${infiniverse_version}")
 }
 ```
 Where
-* `${infiniverse_branch}` is e.g. infiniverse-1.18.1, indicating which version of minecraft the mod was compiled against. Other valid groups can be observed by browsing the maven above.
-* `${infiniverse_version}` is e.g. 1.0.0.0
+* `${infiniverse_branch}` is e.g. infiniverse-1.20.4, indicating which version of minecraft the mod was compiled against. Other valid groups can be observed by browsing the maven above.
+* `${infiniverse_version}` is e.g. 2.0.0.0
 
 If you only need Infiniverse in your dev environment during runtime, you can alternatively use cursemaven to depend on a specific file: <https://www.cursemaven.com/>
 
@@ -31,11 +31,11 @@ Be aware that sources and javadocs are not able to be provided via cursemaven.
 
 ### InfiniverseAPI
 
-Dependant mods can use `commoble.infiniverse.api.InfiniverseAPI.get()` to get the Infiniverse API, which allows dimensions to be added or removed during server runtime.
+Dependant mods can use `net.commoble.infiniverse.api.InfiniverseAPI.get()` to get the Infiniverse API, which allows dimensions to be added or removed during server runtime.
 
-This should generally only be used for dimensions that need some sort of user input to determine how they should be created; static dimensions can be created using standard dimension jsons instead of using the Infiniverse API. <https://minecraft.fandom.com/wiki/Custom_dimension>
+This should generally only be used for dimensions that need some sort of user input to determine how they should be created; static dimensions can be created using standard dimension jsons instead of using the Infiniverse API. <https://minecraft.wiki/w/Custom_dimension>
 
-For an example of a mod that uses the Infiniverse API, see Infiniverse Utils: <https://github.com/Commoble/infiniverse_utils>
+For an example of a mod that uses the Infiniverse API, see the src/examplemod sourceset.
 
 ### UnregisterDimensionEvent
 

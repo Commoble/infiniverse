@@ -1,9 +1,9 @@
-package commoble.infiniverse.api;
+package net.commoble.infiniverse.api;
 
 import java.util.Set;
 import java.util.function.Supplier;
 
-import commoble.infiniverse.internal.DimensionManager;
+import net.commoble.infiniverse.internal.DimensionManager;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;

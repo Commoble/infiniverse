@@ -1,4 +1,4 @@
-package commoble.infiniverse.internal;
+package net.commoble.infiniverse.internal;
 
 import java.util.HashSet;
 import java.util.Set;

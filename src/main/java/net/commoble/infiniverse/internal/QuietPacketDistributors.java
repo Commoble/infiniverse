@@ -1,4 +1,4 @@
-package commoble.infiniverse.internal;
+package net.commoble.infiniverse.internal;
 
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.MinecraftServer;

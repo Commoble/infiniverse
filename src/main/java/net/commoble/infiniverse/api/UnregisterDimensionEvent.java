@@ -1,4 +1,4 @@
-package commoble.infiniverse.api;
+package net.commoble.infiniverse.api;
 
 import net.minecraft.server.level.ServerLevel;
 import net.neoforged.bus.api.Event;
