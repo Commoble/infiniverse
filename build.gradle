@@ -7,7 +7,7 @@ plugins {
 }
 
 version = "${mod_version}"
-group = "commoble.${modid}" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
+group = "net.commoble.${modid}" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 base {
 	archivesName = "${modid}-${mc_version}"
 }
@@ -54,6 +54,7 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 configurations {
 	examplemodCompileClasspath.extendsFrom(compileClasspath)
+	examplemodRuntimeClasspath.extendsFrom(runtimeClasspath)
 }
 
 repositories {
