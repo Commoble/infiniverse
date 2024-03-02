@@ -31,51 +31,52 @@ public class ExampleMod
 {
 	public static final String MODID = "infiniverse_examplemod";
 	public static final ResourceKey<Level> LEVEL_KEY = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(MODID, "example_dimension"));
-	
+
 	public ExampleMod()
 	{
 		NeoForge.EVENT_BUS.addListener(this::onRegisterCommands);
 	}
-	
+
 	void onRegisterCommands(RegisterCommandsEvent event)
 	{
 		event.getDispatcher().register(Commands.literal("infiniverse_examplemod")
-			.then(Commands.literal("create_dimension")
-				.executes(this::createDimension))
-			.then(Commands.literal("remove_dimension")
-				.executes(this::removeDimension)));
+				.then(Commands.literal("create_dimension")
+						.executes(this::createDimension))
+				.then(Commands.literal("remove_dimension")
+						.executes(this::removeDimension)));
 	}
-	
+
 	int createDimension(CommandContext<CommandSourceStack> context) throws CommandSyntaxException
 	{
-		try {
+		try
+		{
 			InfiniverseAPI.get().getOrCreateLevel(context.getSource().getServer(), LEVEL_KEY, () -> createLevel(context.getSource().getServer()));
-		}
-		catch (Exception e) {
+		} catch (Exception e)
+		{
 			throw new SimpleCommandExceptionType(Component.literal(e.getMessage())).create();
 		}
-		
+
 		return 1;
 	}
-	
+
 	int removeDimension(CommandContext<CommandSourceStack> context)
 	{
 		InfiniverseAPI.get().markDimensionForUnregistration(context.getSource().getServer(), LEVEL_KEY);
-		
+
 		return 1;
 	}
-	
+
 	LevelStem createLevel(MinecraftServer server)
 	{
 		ServerLevel oldLevel = server.overworld();
 		DynamicOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, server.registryAccess());
 		ChunkGenerator oldChunkGenerator = oldLevel.getChunkSource().getGenerator();
 		ChunkGenerator newChunkGenerator = ChunkGenerator.CODEC.encodeStart(ops, oldChunkGenerator)
-			.flatMap(nbt -> ChunkGenerator.CODEC.parse(ops, nbt))
-			.getOrThrow(false, s ->
-			{
-				throw new RuntimeException(String.format("Error copying dimension: {}", s));
-			});
+				.flatMap(nbt -> ChunkGenerator.CODEC.parse(ops, nbt))
+				.getOrThrow(false, s ->
+				{
+					throw new RuntimeException(String.format("Error copying dimension: {}", s));
+				});
 		Holder<DimensionType> typeHolder = oldLevel.dimensionTypeRegistration();
 		return new LevelStem(typeHolder, newChunkGenerator);
 	}

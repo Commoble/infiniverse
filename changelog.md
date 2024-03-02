@@ -1,5 +1,7 @@
 ## 2.0.0.0
 * Now uses the neoforge modloader instead of forge
+* Unregistering a dimension now saves the level and its chunks
+* Dimension unregistering at end of server tick now happens at LOWEST event priority
 
 ## 1.0.0.5
 * Updated to minecraft 1.20.1

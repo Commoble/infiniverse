@@ -1,9 +1,9 @@
 package commoble.infiniverse.internal;
 
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.PacketDistributor;
-import net.neoforged.neoforge.network.PlayNetworkDirection;
-import net.neoforged.neoforge.network.simple.SimpleChannel;
-import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 /**
  * Packet distributors and helpers for sending packets only to players who have the channel
@@ -13,19 +13,15 @@ import net.neoforged.neoforge.server.ServerLifecycleHooks;
 public final class QuietPacketDistributors
 {
 	private QuietPacketDistributors() {}
-	
-	// sends packets to all players but just the ones that have the provided channel
-	private static final PacketDistributor<SimpleChannel> ALL = new PacketDistributor<>(
-		(distributor, channelGetter) -> packet -> ServerLifecycleHooks.getCurrentServer()
-			.getPlayerList()
-			.getPlayers()
-			.stream()
-			.filter(player -> channelGetter.get().isRemotePresent(player.connection.connection))
-			.forEach(player -> player.connection.connection.send(packet)),
-		PlayNetworkDirection.PLAY_TO_CLIENT);
 
-	public static <PACKET> void sendToAll(SimpleChannel channel, PACKET packet)
+	public static <PACKET extends CustomPacketPayload> void sendToAll(MinecraftServer server, PACKET packet)
 	{
-		channel.send(ALL.with(()->channel), packet);
+		for (ServerPlayer player : server.getPlayerList().getPlayers())
+		{
+			if (player.connection.isConnected(packet))
+			{
+				PacketDistributor.PLAYER.with(player).send(packet);
+			}
+		}
 	}
 }

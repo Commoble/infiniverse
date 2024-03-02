@@ -41,6 +41,7 @@ import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.storage.DerivedLevelData;
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
 import net.minecraft.world.level.storage.WorldData;
+import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod.EventBusSubscriber;
 import net.neoforged.neoforge.common.NeoForge;
@@ -96,8 +97,8 @@ public final class DimensionManager implements InfiniverseAPI
 	}
 	
 	/**
-	 * Schedules a non-vanilla level/dimension to be unregistered and removed at the end of the current server tick.<br>
-	 * This will have the following effects:<br>
+	 * Saves a non-vanilla level and Schedules it to be unregistered and removed at the end of the current server tick.<br>
+	 * Unregistering the level will have the following effects:<br>
 	 * <ul>
 	 * <li>Unregistered levels will stop ticking.
 	 * <li>Unregistered dimensions will not be loaded on server startup unless and until they are registered again (via {@link DimensionManager#getOrCreateLevel}.
@@ -116,7 +117,12 @@ public final class DimensionManager implements InfiniverseAPI
 	{
 		if (!VANILLA_LEVELS.contains(levelToRemove))
 		{
-			levelsPendingUnregistration.add(levelToRemove);
+			ServerLevel level = server.getLevel(levelToRemove);
+			if (level != null)
+			{
+				level.save(null, true, false);
+				levelsPendingUnregistration.add(levelToRemove);
+			}
 		}
 	}
 	
@@ -199,7 +205,7 @@ public final class DimensionManager implements InfiniverseAPI
 		NeoForge.EVENT_BUS.post(new LevelEvent.Load(newLevel));
 
 		// update clients' dimension lists
-		QuietPacketDistributors.sendToAll(InfiniverseMod.CHANNEL, new UpdateDimensionsPacket(Set.of(levelKey), true));
+		QuietPacketDistributors.sendToAll(server, new UpdateDimensionsPacket(Set.of(levelKey), true));
 
 		return newLevel;
 	}
@@ -376,14 +382,14 @@ public final class DimensionManager implements InfiniverseAPI
 			server.markWorldsDirty();
 			
 			// notify client of the removed levels
-			QuietPacketDistributors.sendToAll(InfiniverseMod.CHANNEL, new UpdateDimensionsPacket(removedLevelKeys, false));
+			QuietPacketDistributors.sendToAll(server, new UpdateDimensionsPacket(removedLevelKeys, false));
 		}
 	}
 	
 	@EventBusSubscriber(modid = InfiniverseMod.MODID)
 	private static class ForgeEventHandler
 	{
-		@SubscribeEvent
+		@SubscribeEvent(priority=EventPriority.LOWEST)
 		public static void onServerTick(final ServerTickEvent event)
 		{
 			if (event.phase == TickEvent.Phase.END)
