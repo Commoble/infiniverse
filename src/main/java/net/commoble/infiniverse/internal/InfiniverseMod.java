@@ -19,6 +19,7 @@ public final class InfiniverseMod
 	void onRegisterPayloadHandlers(RegisterPayloadHandlerEvent event)
 	{
 		event.registrar(MODID)
+			.optional()
 			.play(new ResourceLocation(MODID, "update_dimensions"), UpdateDimensionsPacket::read, UpdateDimensionsPacket::handle);
 	}
 }

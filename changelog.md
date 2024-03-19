@@ -1,3 +1,6 @@
+## 2.0.0.1
+* Fix clients without infiniverse being unable to connect to servers with infiniverse
+
 ## 2.0.0.0
 * Now uses the neoforge modloader instead of forge
 * Moved all packages from commoble to net.commoble package
