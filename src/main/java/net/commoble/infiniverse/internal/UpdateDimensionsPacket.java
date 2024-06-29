@@ -1,20 +1,20 @@
 package net.commoble.infiniverse.internal;
 
-import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import io.netty.buffer.ByteBuf;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.network.FriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
-import net.neoforged.api.distmarker.Dist;
-import net.neoforged.fml.loading.FMLEnvironment;
-import net.neoforged.neoforge.network.handling.PlayPayloadContext;
+import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 /**
  * @param keys Keys to add or remove in the client's dimension list
@@ -22,35 +22,22 @@ import net.neoforged.neoforge.network.handling.PlayPayloadContext;
  */
 public record UpdateDimensionsPacket(Set<ResourceKey<Level>> keys, boolean add) implements CustomPacketPayload
 {
-	public static final ResourceLocation ID = new ResourceLocation(InfiniverseMod.MODID, "update_dimensions");
+	public static final CustomPacketPayload.Type<UpdateDimensionsPacket> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(InfiniverseMod.MODID, "update_dimensions"));
 	
-	public static UpdateDimensionsPacket read(FriendlyByteBuf buffer)
+	public static final StreamCodec<ByteBuf, UpdateDimensionsPacket> STREAM_CODEC = StreamCodec.composite(
+		ResourceKey.streamCodec(Registries.DIMENSION).apply(ByteBufCodecs.list()).map(Set::copyOf, List::copyOf), UpdateDimensionsPacket::keys,
+		ByteBufCodecs.BOOL, UpdateDimensionsPacket::add,
+		UpdateDimensionsPacket::new);
+	
+	public void handle(IPayloadContext context)
 	{
-		Set<ResourceKey<Level>> keys = buffer.readCollection(i->new HashSet<>(), buf->ResourceKey.create(Registries.DIMENSION, buf.readResourceLocation()));
-		boolean add = buffer.readBoolean();
-		
-		return new UpdateDimensionsPacket(keys,add);
+		context.enqueueWork(() -> ClientHandler.handle(this));
 	}
-	
+
 	@Override
-	public ResourceLocation id()
+	public Type<? extends CustomPacketPayload> type()
 	{
-		return ID;
-	}
-	
-	@Override
-	public void write(FriendlyByteBuf buffer)
-	{
-		buffer.writeCollection(this.keys(), (buf,key)->buf.writeResourceLocation(key.location()));
-		buffer.writeBoolean(this.add());
-	}
-	
-	public void handle(PlayPayloadContext context)
-	{
-		if (FMLEnvironment.dist == Dist.CLIENT)
-		{
-			context.workHandler().execute(() -> ClientHandler.handle(this));
-		}
+		return TYPE;
 	}
 
 	private static class ClientHandler // making client calls in the static class prevents classloading errors

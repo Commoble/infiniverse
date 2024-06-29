@@ -18,9 +18,9 @@ public final class QuietPacketDistributors
 	{
 		for (ServerPlayer player : server.getPlayerList().getPlayers())
 		{
-			if (player.connection.isConnected(packet))
+			if (player.connection.hasChannel(packet))
 			{
-				PacketDistributor.PLAYER.with(player).send(packet);
+				PacketDistributor.sendToPlayer(player, packet);
 			}
 		}
 	}

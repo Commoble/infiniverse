@@ -45,6 +45,7 @@ import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
 import net.minecraft.world.level.storage.WorldData;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
@@ -391,15 +392,12 @@ public final class DimensionManager implements InfiniverseAPI
 	private static class ForgeEventHandler
 	{
 		@SubscribeEvent(priority=EventPriority.LOWEST)
-		public static void onServerTick(final ServerTickEvent event)
+		public static void onServerTick(final ServerTickEvent.Post event)
 		{
-			if (event.phase == TickEvent.Phase.END)
+			MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
+			if (server != null)
 			{
-				MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
-				if (server != null)
-				{
-					DimensionManager.INSTANCE.unregisterScheduledDimensions(server);
-				}
+				DimensionManager.INSTANCE.unregisterScheduledDimensions(server);
 			}
 		}
 		

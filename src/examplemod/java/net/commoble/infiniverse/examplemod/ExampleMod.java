@@ -22,6 +22,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.chunk.ChunkGenerator;
 import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.dimension.LevelStem;
+import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
@@ -29,7 +30,7 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 public class ExampleMod
 {
 	public static final String MODID = "infiniverse_examplemod";
-	public static final ResourceKey<Level> LEVEL_KEY = ResourceKey.create(Registries.DIMENSION, new ResourceLocation(MODID, "example_dimension"));
+	public static final ResourceKey<Level> LEVEL_KEY = ResourceKey.create(Registries.DIMENSION, ResourceLocation.fromNamespaceAndPath(MODID, "example_dimension"));
 
 	public ExampleMod()
 	{
@@ -45,6 +46,7 @@ public class ExampleMod
 						.executes(this::removeDimension)));
 	}
 
+	@SuppressWarnings("resource")
 	int createDimension(CommandContext<CommandSourceStack> context) throws CommandSyntaxException
 	{
 		try
@@ -72,10 +74,7 @@ public class ExampleMod
 		ChunkGenerator oldChunkGenerator = oldLevel.getChunkSource().getGenerator();
 		ChunkGenerator newChunkGenerator = ChunkGenerator.CODEC.encodeStart(ops, oldChunkGenerator)
 				.flatMap(nbt -> ChunkGenerator.CODEC.parse(ops, nbt))
-				.getOrThrow(false, s ->
-				{
-					throw new RuntimeException(String.format("Error copying dimension: {}", s));
-				});
+				.getOrThrow(s -> new RuntimeException(String.format("Error copying dimension: {}", s)));
 		Holder<DimensionType> typeHolder = oldLevel.dimensionTypeRegistration();
 		return new LevelStem(typeHolder, newChunkGenerator);
 	}

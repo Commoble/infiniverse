@@ -1,3 +1,6 @@
+## 2.0.1.0
+* Updated to MC 1.21 / neoforge 21.0.40-beta
+
 ## 2.0.0.1
 * Fix clients without infiniverse being unable to connect to servers with infiniverse
 

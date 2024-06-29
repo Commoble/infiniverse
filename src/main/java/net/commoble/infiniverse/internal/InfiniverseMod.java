@@ -1,9 +1,7 @@
 package net.commoble.infiniverse.internal;
 
-import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.network.event.RegisterPayloadHandlerEvent;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 
 @Mod(InfiniverseMod.MODID)
@@ -21,6 +19,6 @@ public final class InfiniverseMod
 	{
 		event.registrar(MODID)
 			.optional()
-			.play(new ResourceLocation(MODID, "update_dimensions"), UpdateDimensionsPacket::read, UpdateDimensionsPacket::handle);
+			.playToClient(UpdateDimensionsPacket.TYPE, UpdateDimensionsPacket.STREAM_CODEC, UpdateDimensionsPacket::handle);
 	}
 }
