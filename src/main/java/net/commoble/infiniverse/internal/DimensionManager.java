@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.function.Supplier;
@@ -23,6 +24,7 @@ import net.commoble.infiniverse.api.UnregisterDimensionEvent;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.LayeredRegistryAccess;
 import net.minecraft.core.MappedRegistry;
+import net.minecraft.core.RegistrationInfo;
 import net.minecraft.core.Registry;
 import net.minecraft.core.RegistryAccess;
 import net.minecraft.core.RegistryAccess.ImmutableRegistryAccess;
@@ -43,12 +45,10 @@ import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
 import net.minecraft.world.level.storage.WorldData;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.common.Mod.EventBusSubscriber;
 import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.TickEvent;
-import net.neoforged.neoforge.event.TickEvent.ServerTickEvent;
 import net.neoforged.neoforge.event.level.LevelEvent;
 import net.neoforged.neoforge.event.server.ServerStoppedEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 
 /**
@@ -56,6 +56,7 @@ import net.neoforged.neoforge.server.ServerLifecycleHooks;
  */
 public final class DimensionManager implements InfiniverseAPI
 {
+	private static final RegistrationInfo DIMENSION_REGISTRATION_INFO = new RegistrationInfo(Optional.empty(), Lifecycle.stable());
 	private DimensionManager() {}
 	
 	/**
@@ -162,7 +163,7 @@ public final class DimensionManager implements InfiniverseAPI
 		if (dimensionRegistry instanceof MappedRegistry<LevelStem> writableRegistry)
 		{
 			writableRegistry.unfreeze();
-			writableRegistry.register(dimensionKey, dimension, Lifecycle.stable());
+			writableRegistry.register(dimensionKey, dimension, DIMENSION_REGISTRATION_INFO);
 		}
 		else
 		{
@@ -342,7 +343,7 @@ public final class DimensionManager implements InfiniverseAPI
 				final LevelStem dimension = entry.getValue();
 				if (oldKey != null && dimension != null && !removedLevelKeys.contains(oldLevelKey))
 				{
-					newRegistry.register(oldKey, dimension, oldRegistry.lifecycle(dimension));
+					newRegistry.register(oldKey, dimension, oldRegistry.registrationInfo(oldKey).orElse(DIMENSION_REGISTRATION_INFO));
 				}
 			}
 

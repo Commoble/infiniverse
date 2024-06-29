@@ -4,6 +4,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlerEvent;
+import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 
 @Mod(InfiniverseMod.MODID)
 public final class InfiniverseMod
@@ -16,7 +17,7 @@ public final class InfiniverseMod
 		modBus.addListener(this::onRegisterPayloadHandlers);
 	}
 	
-	void onRegisterPayloadHandlers(RegisterPayloadHandlerEvent event)
+	void onRegisterPayloadHandlers(RegisterPayloadHandlersEvent event)
 	{
 		event.registrar(MODID)
 			.optional()

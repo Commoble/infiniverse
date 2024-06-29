@@ -3,7 +3,7 @@ plugins {
 	id 'eclipse'
 	id 'idea'
 	id 'maven-publish'
-	id 'net.neoforged.gradle.userdev' version "7.0.+"
+	id 'net.neoforged.gradle.userdev' version "7.0.152"
 }
 
 version = "${mod_version}"
@@ -28,7 +28,7 @@ sourceSets
 runs {
 	configureEach {
 		systemProperty 'forge.logging.console.level', 'debug'
-		modSources.addAll project.sourceSets.main, project.sourceSets.examplemod
+		modSources.add project.sourceSets.main, project.sourceSets.examplemod
 	}
 
 	client {
