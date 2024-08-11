@@ -12,7 +12,7 @@ To use infiniverse in your mod's development environment with full sources and j
 
 ```gradle
 repositories {
-	maven { url "https://commoble.net/maven/" }
+	maven { url "https://maven.commoble.net/" }
 }
 
 dependencies {
