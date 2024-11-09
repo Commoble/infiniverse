@@ -3,7 +3,16 @@ plugins {
 	id 'eclipse'
 	id 'idea'
 	id 'maven-publish'
-	id 'net.neoforged.gradle.userdev' version "7.0.152"
+	id 'net.neoforged.moddev' version '1.0.+'
+}
+
+tasks.named('wrapper', Wrapper).configure {
+    // Define wrapper values here so as to not have to always do so when updating gradlew.properties.
+    // Switching this to Wrapper.DistributionType.ALL will download the full gradle sources that comes with
+    // documentation attached on cursor hover of gradle classes and methods. However, this comes with increased
+    // file size for Gradle. If you do switch this to ALL, run the Gradle wrapper task twice afterwards.
+    // (Verify by checking gradle/wrapper/gradle-wrapper.properties to see if distributionUrl now points to `-all`)
+    distributionType = Wrapper.DistributionType.BIN
 }
 
 version = "${mod_version}"
@@ -19,33 +28,38 @@ java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 sourceSets
 {
 	main
-	examplemod { runs { modIdentifier "infiniverse_examplemod" }}
-	test
+	examplemod
 }
 
 //minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
 
-runs {
-	configureEach {
-		systemProperty 'forge.logging.console.level', 'debug'
-		modSources.add project.sourceSets.main, project.sourceSets.examplemod
+neoForge {
+	version = "${neo_version}"
+	mods {
+		"${modid}" {
+			sourceSet(sourceSets.main)
+		}
+		"infiniverse_examplemod" {
+			sourceSet(sourceSets.examplemod)
+		}
 	}
-
-	client {
-		// Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
-		systemProperty 'forge.enabledGameTestNamespaces', project.modid
-	}
-
-	server {
-		systemProperty 'forge.enabledGameTestNamespaces', project.modid
-	}
-	
-	gameTestServer {
-		systemProperty 'forge.enabledGameTestNamespaces', project.modid
-	}
-
-	data {
-		programArguments.addAll '--mod', project.modid, '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+	runs {
+		client {
+			client()
+		}
+		server {
+			server()
+		}
+		gameTestServer {
+			type = "gameTestServer"
+		}
+		data {
+			data()
+			programArguments.addAll '--mod', "infiniverse", '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
+		}
+		configureEach {
+			
+		}
 	}
 }
 
@@ -61,23 +75,7 @@ repositories {
 }
 
 dependencies {
-	implementation "net.neoforged:neoforge:${neo_version}"
 	examplemodImplementation sourceSets.main.output
-}
-
-// Example for how to get properties into the manifest for reading by the runtime..
-jar {
-	manifest {
-		attributes([
-			"Specification-Title": "${modid}",
-			"Specification-Vendor": "Commoble",
-			"Specification-Version": "1", // We are version 1 of ourselves
-			"Implementation-Title": project.name,
-			"Implementation-Version": "${version}",
-			"Implementation-Vendor" :"Commoble",
-			"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
-		])
-	}
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
@@ -112,4 +110,16 @@ publishing {
 			url "file:///${project.projectDir}/maven"
 		}
 	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8' // Use the UTF-8 charset for Java compilation
+}
+
+// IDEA no longer automatically downloads sources/javadoc jars for dependencies, so we need to explicitly enable the behavior.
+idea {
+    module {
+        downloadSources = true
+        downloadJavadoc = true
+    }
 }

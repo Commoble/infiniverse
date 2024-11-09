@@ -160,10 +160,10 @@ public final class DimensionManager implements InfiniverseAPI
 		// then instantiate level, add border listener, add to map, fire world load event
 		
 		// register the actual dimension
-		Registry<LevelStem> dimensionRegistry = server.registryAccess().registryOrThrow(Registries.LEVEL_STEM);
+		Registry<LevelStem> dimensionRegistry = server.registryAccess().lookupOrThrow(Registries.LEVEL_STEM);
 		if (dimensionRegistry instanceof MappedRegistry<LevelStem> writableRegistry)
 		{
-			writableRegistry.unfreeze();
+			writableRegistry.unfreeze(false);
 			writableRegistry.register(dimensionKey, dimension, DIMENSION_REGISTRATION_INFO);
 		}
 		else
@@ -229,7 +229,7 @@ public final class DimensionManager implements InfiniverseAPI
 		// the dimension registry has five sub-collections that need to be cleaned up
 		// we should also eject players from removed worlds so they don't get stuck there
 
-		final Registry<LevelStem> oldRegistry = server.registryAccess().registryOrThrow(Registries.LEVEL_STEM);
+		final Registry<LevelStem> oldRegistry = server.registryAccess().lookupOrThrow(Registries.LEVEL_STEM);
 		if (!(oldRegistry instanceof MappedRegistry<LevelStem> oldMappedRegistry))
 		{
 			LOGGER.warn("Cannot unload dimensions: dimension registry not an instance of MappedRegistry. There may be another mod causing incompatibility with Infiniverse, or Infiniverse may need to be updated for your version of forge/minecraft.");
@@ -297,7 +297,7 @@ public final class DimensionManager implements InfiniverseAPI
 					// that causes some minor logspam due to the player's world no longer being
 					// loaded
 					// teleporting the player via a teleport avoids this
-					player.teleportTo(destinationLevel, destinationPos.getX(), destinationPos.getY(), destinationPos.getZ(), respawnAngle, 0F);
+					player.teleportTo(destinationLevel, destinationPos.getX(), destinationPos.getY(), destinationPos.getZ(), Set.of(), respawnAngle, 0F, true);
 				}
 				// save the world now or it won't be saved later and data that may be wanted to
 				// be kept may be lost
