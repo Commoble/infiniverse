@@ -3,7 +3,7 @@ plugins {
 	id 'eclipse'
 	id 'idea'
 	id 'maven-publish'
-	id 'net.neoforged.moddev' version '1.0.+'
+	id 'net.neoforged.moddev' version '2.0.+'
 }
 
 tasks.named('wrapper', Wrapper).configure {
@@ -18,10 +18,8 @@ tasks.named('wrapper', Wrapper).configure {
 version = "${mod_version}"
 group = "net.commoble.${modid}" // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 base {
-	archivesName = "${modid}-${mc_version}"
+	archivesName = "${modid}"
 }
-
-archivesBaseName = "${modid}-${mc_version}"
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
@@ -52,10 +50,6 @@ neoForge {
 		}
 		gameTestServer {
 			type = "gameTestServer"
-		}
-		data {
-			data()
-			programArguments.addAll '--mod', "infiniverse", '--all', '--output', file('src/generated/resources/').getAbsolutePath(), '--existing', file('src/main/resources/').getAbsolutePath()
 		}
 		configureEach {
 			

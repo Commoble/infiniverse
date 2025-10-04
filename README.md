@@ -4,7 +4,6 @@ Infiniverse is primarily a server mod and not required on clients (it is also co
 
 Built mod jars are available here:
 * <https://www.curseforge.com/minecraft/mc-mods/infiniverse>
-* <https://modrinth.com/mod/infiniverse>
 
 ## Dependency Setup
 
@@ -16,12 +15,13 @@ repositories {
 }
 
 dependencies {
-	implementation fg.deobf("net.commoble.infiniverse:${infiniverse_branch}:${infiniverse_version}")
+	implementation fg.deobf("net.commoble.infiniverse:infiniverse:${infiniverse_version}")
 }
 ```
-Where
-* `${infiniverse_branch}` is e.g. infiniverse-1.20.4, indicating which version of minecraft the mod was compiled against. Other valid groups can be observed by browsing the maven above.
-* `${infiniverse_version}` is e.g. 2.0.0.0
+
+See https://maven.commoble.net/net/commoble/infiniverse/infiniverse/ for available artifacts.
+
+Infiniverse versions in 1.21.9+ follow the schema MCMAJOR.MCMINOR.MODVERSION, e.g. 21.9.0 is the first release of infiniverse for MC 1.21.9
 
 If you only need Infiniverse in your dev environment during runtime, you can alternatively use cursemaven to depend on a specific file: <https://www.cursemaven.com/>
 
@@ -40,11 +40,3 @@ For an example of a mod that uses the Infiniverse API, see the src/examplemod so
 ### UnregisterDimensionEvent
 
 Fired on the forge bus when a dimension/level is about to be unregistered and removed from the server. Not cancellable.
-
-## Versioning Semantics
-
-Infiniverse's versions use the format A.B.C.D, where
-* Increments to A indicate breaking changes to save format. Worlds saved with older versions of A may not be compatible with newer versions.
-* Increments to B indicate breaking changes to APIs. Dependant mods compiled against older versions of B or A may not be compatible with newer versions.
-* Increments to C indicate breaking changes to netcode. When a server updates to a newer version of C, B, or A, clients may need to update as well.
-* Increments to D indicate changes to implementation details. These will generally not break anything, though depdendant mods using the internals rather than the API may need to update.

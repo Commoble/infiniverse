@@ -34,13 +34,11 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.RegistryLayer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.level.progress.ChunkProgressListener;
-import net.minecraft.world.RandomSequences;
+import net.minecraft.server.level.ServerPlayer.RespawnConfig;
 import net.minecraft.world.level.Level;
-import net.minecraft.world.level.border.BorderChangeListener;
-import net.minecraft.world.level.border.WorldBorder;
 import net.minecraft.world.level.dimension.LevelStem;
 import net.minecraft.world.level.storage.DerivedLevelData;
+import net.minecraft.world.level.storage.LevelData.RespawnData;
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
 import net.minecraft.world.level.storage.WorldData;
 import net.neoforged.bus.api.EventPriority;
@@ -147,8 +145,6 @@ public final class DimensionManager implements InfiniverseAPI
 		final ResourceKey<LevelStem> dimensionKey = ResourceKey.create(Registries.LEVEL_STEM, levelKey.location());
 		final LevelStem dimension = dimensionFactory.get();
 
-		// the int in create() here is radius of chunks to watch, 11 is what the server uses when it initializes levels
-		final ChunkProgressListener chunkProgressListener = ReflectionBuddy.MinecraftServerAccess.progressListenerFactory.apply(server).create(11);
 		final Executor executor = ReflectionBuddy.MinecraftServerAccess.executor.apply(server);
 		final LevelStorageAccess anvilConverter = ReflectionBuddy.MinecraftServerAccess.storageSource.apply(server);
 		final WorldData worldData = server.getWorldData();
@@ -179,7 +175,6 @@ public final class DimensionManager implements InfiniverseAPI
 			derivedLevelData,
 			levelKey,
 			dimension,
-			chunkProgressListener,
 			worldData.isDebugWorld(),
 			overworld.getSeed(), // don't need to call BiomeManager#obfuscateSeed, overworld seed is already obfuscated
 			List.of(), // "special spawn list"
@@ -188,14 +183,14 @@ public final class DimensionManager implements InfiniverseAPI
 				// these spawners are ticked when the world ticks to do their spawning logic,
 				// mods that need "special spawns" for their own dimensions should implement them via tick events or other systems
 			false, // "tick time", true for overworld, always false for nether, end, and json dimensions
-			(RandomSequences)null // as of 1.20.1 this argument is always null in vanilla, indicating the level should load the sequence from storage
+			overworld.getRandomSequences() // as of 1.21.9 non-overworld levels share the overworld's randomSequences
 			);
-		
-		// add world border listener, for parity with json dimensions
-		// the vanilla behaviour is that world borders exist in every dimension simultaneously with the same size and position
-		// these border listeners are automatically added to the overworld as worlds are loaded, so we should do that here too
-		// TODO if world-specific world borders are ever added, change it here too
-		overworld.getWorldBorder().addListener(new BorderChangeListener.DelegateBorderChangeListener(newLevel.getWorldBorder()));
+
+        newLevel.getWorldBorder().setAbsoluteMaxSize(server.getAbsoluteMaxWorldSize());
+        // no, we don't need to remember the worldborder listener to remove it later
+        // worldborder listeners are stored in the specific level's savedata
+        // so if the level unloads it'll get gc'd with everything else
+        server.getPlayerList().addWorldborderListener(newLevel);
 
 		// register level
 		map.put(levelKey, newLevel);
@@ -267,12 +262,22 @@ public final class DimensionManager implements InfiniverseAPI
 				for (final ServerPlayer player : Lists.newArrayList(removedLevel.players()))
 				{
 					// send players to their respawn point
-					ResourceKey<Level> respawnKey = player.getRespawnDimension();
+					@Nullable RespawnConfig respawnConfig = player.getRespawnConfig();
+					RespawnData respawnData = respawnConfig == null
+						? server.getRespawnData()
+						: respawnConfig.respawnData();
+					ResourceKey<Level> respawnKey = respawnData.dimension();
+					BlockPos destinationPos = respawnData.pos();
+
 					// if we're removing their respawn world then just send them to the overworld
 					if (keysToRemove.contains(respawnKey))
 					{
 						respawnKey = Level.OVERWORLD;
-						player.setRespawnPosition(respawnKey, null, 0, false, false);
+						// make sure to wipe the player's respawn point if it was set here
+						if (respawnConfig != null && respawnConfig.respawnData().dimension() == respawnKey)
+						{
+							player.setRespawnPosition(null, false);
+						}
 					}
 					if (respawnKey == null)
 					{
@@ -284,20 +289,12 @@ public final class DimensionManager implements InfiniverseAPI
 						destinationLevel = overworld;
 					}
 
-					@Nullable
-					BlockPos destinationPos = player.getRespawnPosition();
-					if (destinationPos == null)
-					{
-						destinationPos = destinationLevel.getSharedSpawnPos();
-					}
-
-					final float respawnAngle = player.getRespawnAngle();
 					// "respawning" the player via the player list schedules a task in the server to
 					// run after the post-server tick
 					// that causes some minor logspam due to the player's world no longer being
 					// loaded
 					// teleporting the player via a teleport avoids this
-					player.teleportTo(destinationLevel, destinationPos.getX(), destinationPos.getY(), destinationPos.getZ(), Set.of(), respawnAngle, 0F, true);
+					player.teleportTo(destinationLevel, destinationPos.getX(), destinationPos.getY(), destinationPos.getZ(), Set.of(), respawnData.pitch(), respawnData.yaw(), true);
 				}
 				// save the world now or it won't be saved later and data that may be wanted to
 				// be kept may be lost
@@ -306,25 +303,6 @@ public final class DimensionManager implements InfiniverseAPI
 				// fire world unload event -- when the server stops, this would fire after
 				// worlds get saved, we'll do that here too
 				NeoForge.EVENT_BUS.post(new LevelEvent.Unload(removedLevel));
-
-				// remove the world border listener if possible
-				final WorldBorder overworldBorder = overworld.getWorldBorder();
-				final WorldBorder removedWorldBorder = removedLevel.getWorldBorder();
-				final List<BorderChangeListener> listeners = ReflectionBuddy.WorldBorderAccess.listeners.apply(overworldBorder);
-				BorderChangeListener targetListener = null;
-				for (BorderChangeListener listener : listeners)
-				{
-					if (listener instanceof BorderChangeListener.DelegateBorderChangeListener delegate
-						&& removedWorldBorder == ReflectionBuddy.DelegateBorderChangeListenerAccess.worldBorder.apply(delegate))
-					{
-						targetListener = listener;
-						break;
-					}
-				}
-				if (targetListener != null)
-				{
-					overworldBorder.removeListener(targetListener);
-				}
 
 				// track the removed level
 				removedLevelKeys.add(levelKeyToRemove);
