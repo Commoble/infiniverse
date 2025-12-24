@@ -92,7 +92,7 @@ artifacts {
 publishing {
 	publications {
 		mavenJava(MavenPublication) {
-			artifactId project.archivesBaseName
+			artifactId = project.base.archivesName
 			artifact jar
 			artifact sourcesJar
 			artifact javadocJar
@@ -101,7 +101,7 @@ publishing {
 	repositories {
 		maven {
 			name="localMaven"
-			url "file:///${project.projectDir}/maven"
+			url = "file:///${project.projectDir}/maven"
 		}
 	}
 }

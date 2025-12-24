@@ -142,7 +142,7 @@ public final class DimensionManager implements InfiniverseAPI
 		final ServerLevel overworld = server.getLevel(Level.OVERWORLD);
 		
 		// dimension keys have a 1:1 relationship with level keys, they have the same IDs as well
-		final ResourceKey<LevelStem> dimensionKey = ResourceKey.create(Registries.LEVEL_STEM, levelKey.location());
+		final ResourceKey<LevelStem> dimensionKey = ResourceKey.create(Registries.LEVEL_STEM, levelKey.identifier());
 		final LevelStem dimension = dimensionFactory.get();
 
 		final Executor executor = ReflectionBuddy.MinecraftServerAccess.executor.apply(server);
@@ -164,7 +164,7 @@ public final class DimensionManager implements InfiniverseAPI
 		}
 		else
 		{
-			throw new IllegalStateException(String.format("Unable to register dimension %s -- dimension registry not writable", dimensionKey.location()));
+			throw new IllegalStateException(String.format("Unable to register dimension %s -- dimension registry not writable", dimensionKey.identifier()));
 		}
 
 		// create the level instance
@@ -318,7 +318,7 @@ public final class DimensionManager implements InfiniverseAPI
 			for (final var entry : oldRegistry.entrySet())
 			{
 				final ResourceKey<LevelStem> oldKey = entry.getKey();
-				final ResourceKey<Level> oldLevelKey = ResourceKey.create(Registries.DIMENSION, oldKey.location());
+				final ResourceKey<Level> oldLevelKey = ResourceKey.create(Registries.DIMENSION, oldKey.identifier());
 				final LevelStem dimension = entry.getValue();
 				if (oldKey != null && dimension != null && !removedLevelKeys.contains(oldLevelKey))
 				{

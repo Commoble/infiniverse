@@ -11,8 +11,8 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.Level;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -22,7 +22,7 @@ import net.neoforged.neoforge.network.handling.IPayloadContext;
  */
 public record UpdateDimensionsPacket(Set<ResourceKey<Level>> keys, boolean add) implements CustomPacketPayload
 {
-	public static final CustomPacketPayload.Type<UpdateDimensionsPacket> TYPE = new CustomPacketPayload.Type<>(ResourceLocation.fromNamespaceAndPath(InfiniverseMod.MODID, "update_dimensions"));
+	public static final CustomPacketPayload.Type<UpdateDimensionsPacket> TYPE = new CustomPacketPayload.Type<>(Identifier.fromNamespaceAndPath(InfiniverseMod.MODID, "update_dimensions"));
 	
 	public static final StreamCodec<ByteBuf, UpdateDimensionsPacket> STREAM_CODEC = StreamCodec.composite(
 		ResourceKey.streamCodec(Registries.DIMENSION).apply(ByteBufCodecs.list()).map(Set::copyOf, List::copyOf), UpdateDimensionsPacket::keys,
@@ -44,7 +44,6 @@ public record UpdateDimensionsPacket(Set<ResourceKey<Level>> keys, boolean add) 
 	{
 		private static void handle(UpdateDimensionsPacket packet)
 		{
-			@SuppressWarnings("resource")
 			final LocalPlayer player = Minecraft.getInstance().player;
 			if (player == null)
 				return;

@@ -15,13 +15,13 @@ repositories {
 }
 
 dependencies {
-	implementation fg.deobf("net.commoble.infiniverse:infiniverse:${infiniverse_version}")
+	implementation "net.commoble.infiniverse:infiniverse:${infiniverse_version}"
 }
 ```
 
 See https://maven.commoble.net/net/commoble/infiniverse/infiniverse/ for available artifacts.
 
-Infiniverse versions in 1.21.9+ follow the schema MCMAJOR.MCMINOR.MODVERSION, e.g. 21.9.0 is the first release of infiniverse for MC 1.21.9
+Infiniverse versions in 1.21.9+ follow the schema MCMAJOR.MCMINOR.MODVERSION, e.g. 21.9.0 is the first release of infiniverse for MC 1.21.9. API breaks will not occur within a minor MC version.
 
 If you only need Infiniverse in your dev environment during runtime, you can alternatively use cursemaven to depend on a specific file: <https://www.cursemaven.com/>
 

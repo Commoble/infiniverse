@@ -1,3 +1,6 @@
+## 21.11.0
+* Updated to MC 1.21.11 / neoforge 21.11.12-beta
+
 ## 21.9.0
 * Updated to MC 1.21.9 / neoforge 21.9.11-beta
 

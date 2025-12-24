@@ -13,9 +13,9 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.NbtOps;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.RegistryOps;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.Level;
@@ -30,7 +30,7 @@ import net.neoforged.neoforge.event.RegisterCommandsEvent;
 public class ExampleMod
 {
 	public static final String MODID = "infiniverse_examplemod";
-	public static final ResourceKey<Level> LEVEL_KEY = ResourceKey.create(Registries.DIMENSION, ResourceLocation.fromNamespaceAndPath(MODID, "example_dimension"));
+	public static final ResourceKey<Level> LEVEL_KEY = ResourceKey.create(Registries.DIMENSION, Identifier.fromNamespaceAndPath(MODID, "example_dimension"));
 
 	public ExampleMod()
 	{
@@ -46,7 +46,6 @@ public class ExampleMod
 						.executes(this::removeDimension)));
 	}
 
-	@SuppressWarnings("resource")
 	int createDimension(CommandContext<CommandSourceStack> context) throws CommandSyntaxException
 	{
 		try
