@@ -21,7 +21,7 @@ dependencies {
 
 See https://maven.commoble.net/net/commoble/infiniverse/infiniverse/ for available artifacts.
 
-Infiniverse versions in 1.21.9+ follow the schema MCMAJOR.MCMINOR.MODVERSION, e.g. 21.9.0 is the first release of infiniverse for MC 1.21.9. API breaks will not occur within a minor MC version.
+Infiniverse versions in 26.1+ follow the schema MCYEAR.MCMAJOR.MCMINOR.INFINIVERSE, e.g. 26.1.0.0 is the first release of infiniverse for MC 26.1. API breaks will not occur within a major MC version.
 
 If you only need Infiniverse in your dev environment during runtime, you can alternatively use cursemaven to depend on a specific file: <https://www.cursemaven.com/>
 
