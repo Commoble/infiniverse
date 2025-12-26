@@ -21,7 +21,7 @@ base {
 	archivesName = "${modid}"
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+java.toolchain.languageVersion = JavaLanguageVersion.of("${java_version}")
 
 sourceSets
 {
@@ -70,6 +70,19 @@ repositories {
 
 dependencies {
 	examplemodImplementation sourceSets.main.output
+}
+
+jar {
+    manifest {
+        attributes([
+            "Specification-Title": "${modid}",
+            "Specification-Vendor": "Commoble",
+            "Specification-Version": "${version}",
+            "Implementation-Title": project.name,
+            "Implementation-Version": "${version}",
+            "Implementation-Vendor" :"Commoble"
+        ])
+    }
 }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
