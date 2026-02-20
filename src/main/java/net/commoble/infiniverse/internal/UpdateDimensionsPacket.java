@@ -1,6 +1,7 @@
 package net.commoble.infiniverse.internal;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -48,9 +49,7 @@ public record UpdateDimensionsPacket(Set<ResourceKey<Level>> keys, boolean add) 
 			if (player == null)
 				return;
 			
-			final Set<ResourceKey<Level>> dimensionList = player.connection.levels();
-			if (dimensionList == null)
-				return;
+			final Set<ResourceKey<Level>> dimensionList = Objects.requireNonNullElse(player.connection.levels(), Set.of());
 			
 			Consumer<ResourceKey<Level>> keyConsumer = packet.add()
 				? dimensionList::add

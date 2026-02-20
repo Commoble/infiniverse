@@ -36,7 +36,10 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerPlayer.RespawnConfig;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.biome.BiomeManager;
 import net.minecraft.world.level.dimension.LevelStem;
+import net.minecraft.world.level.levelgen.WorldDimensions;
+import net.minecraft.world.level.levelgen.WorldGenSettings;
 import net.minecraft.world.level.storage.DerivedLevelData;
 import net.minecraft.world.level.storage.LevelData.RespawnData;
 import net.minecraft.world.level.storage.LevelStorageSource.LevelStorageAccess;
@@ -138,9 +141,6 @@ public final class DimensionManager implements InfiniverseAPI
 	@SuppressWarnings("deprecation") // markWorldsDirty is deprecated, see below
 	private static ServerLevel createAndRegisterLevel(final MinecraftServer server, final Map<ResourceKey<Level>, ServerLevel> map, final ResourceKey<Level> levelKey, Supplier<LevelStem> dimensionFactory)
 	{
-		// get everything we need to create the dimension and the level
-		final ServerLevel overworld = server.getLevel(Level.OVERWORLD);
-		
 		// dimension keys have a 1:1 relationship with level keys, they have the same IDs as well
 		final ResourceKey<LevelStem> dimensionKey = ResourceKey.create(Registries.LEVEL_STEM, levelKey.identifier());
 		final LevelStem dimension = dimensionFactory.get();
@@ -149,6 +149,8 @@ public final class DimensionManager implements InfiniverseAPI
 		final LevelStorageAccess anvilConverter = ReflectionBuddy.MinecraftServerAccess.storageSource.apply(server);
 		final WorldData worldData = server.getWorldData();
 		final DerivedLevelData derivedLevelData = new DerivedLevelData(worldData, worldData.overworldData());
+		WorldGenSettings worldGenSettings = server.getWorldGenSettings();
+		long serverSeed = worldGenSettings.options().seed();
 		
 		// now we have everything we need to create the dimension and the level
 		// this is the same order server init creates levels:
@@ -166,6 +168,14 @@ public final class DimensionManager implements InfiniverseAPI
 		{
 			throw new IllegalStateException(String.format("Unable to register dimension %s -- dimension registry not writable", dimensionKey.identifier()));
 		}
+		
+		// sneak dimension into WorldGenSettings so the game can reconstitute it on server reboot
+		WorldDimensions oldDimensions = worldGenSettings.dimensions;
+		Map<ResourceKey<LevelStem>, LevelStem> dimensionMap = new HashMap<>(oldDimensions.dimensions());
+		dimensionMap.put(dimensionKey, dimension);
+		WorldDimensions newDimensions = new WorldDimensions(dimensionMap);
+		worldGenSettings.dimensions = newDimensions;
+		worldGenSettings.setDirty();
 
 		// create the level instance
 		final ServerLevel newLevel = new ServerLevel(
@@ -176,15 +186,14 @@ public final class DimensionManager implements InfiniverseAPI
 			levelKey,
 			dimension,
 			worldData.isDebugWorld(),
-			overworld.getSeed(), // don't need to call BiomeManager#obfuscateSeed, overworld seed is already obfuscated
+			BiomeManager.obfuscateSeed(dimension.seedOverride().orElse(serverSeed)),
 			List.of(), // "special spawn list"
 				// phantoms, travelling traders, patrolling/sieging raiders, and cats are overworld special spawns
 				// this is always empty for non-overworld dimensions (including json dimensions)
 				// these spawners are ticked when the world ticks to do their spawning logic,
 				// mods that need "special spawns" for their own dimensions should implement them via tick events or other systems
-			false, // "tick time", true for overworld, always false for nether, end, and json dimensions
-			overworld.getRandomSequences() // as of 1.21.9 non-overworld levels share the overworld's randomSequences
-			);
+			false // "tick time", true for overworld, always false for nether, end, and json dimensions
+		);
 
         newLevel.getWorldBorder().setAbsoluteMaxSize(server.getAbsoluteMaxWorldSize());
         // no, we don't need to remember the worldborder listener to remove it later
@@ -217,12 +226,25 @@ public final class DimensionManager implements InfiniverseAPI
 		final Set<ResourceKey<Level>> keysToRemove = this.levelsPendingUnregistration;
 		this.levelsPendingUnregistration = new HashSet<>();
 
-		// we need to remove the dimension/level from three places:
+		// we need to remove the dimension/level from four places:
+		// the WorldGenSettings savedata,
 		// the server's dimension/levelstem registry, the server's level registry, and
 		// the overworld's border listener
 		// the level registry is just a simple map and the border listener has a remove() method
 		// the dimension registry has five sub-collections that need to be cleaned up
 		// we should also eject players from removed worlds so they don't get stuck there
+		
+		// sneak dimension out of WorldGenSettings so the game doesn't reconstitute it on server reboot
+		WorldGenSettings worldGenSettings = server.getWorldGenSettings();
+		WorldDimensions oldDimensions = worldGenSettings.dimensions;
+		Map<ResourceKey<LevelStem>, LevelStem> dimensionMap = new HashMap<>(oldDimensions.dimensions());
+		for (var key : keysToRemove)
+		{
+			dimensionMap.remove(key);
+		}
+		WorldDimensions newDimensions = new WorldDimensions(dimensionMap);
+		worldGenSettings.dimensions = newDimensions;
+		worldGenSettings.setDirty();
 
 		final Registry<LevelStem> oldRegistry = server.registryAccess().lookupOrThrow(Registries.LEVEL_STEM);
 		if (!(oldRegistry instanceof MappedRegistry<LevelStem> oldMappedRegistry))
@@ -262,6 +284,8 @@ public final class DimensionManager implements InfiniverseAPI
 				for (final ServerPlayer player : Lists.newArrayList(removedLevel.players()))
 				{
 					// send players to their respawn point
+					if (player == null)
+						continue;
 					@Nullable RespawnConfig respawnConfig = player.getRespawnConfig();
 					RespawnData respawnData = respawnConfig == null
 						? server.getRespawnData()
@@ -278,10 +302,6 @@ public final class DimensionManager implements InfiniverseAPI
 						{
 							player.setRespawnPosition(null, false);
 						}
-					}
-					if (respawnKey == null)
-					{
-						respawnKey = Level.OVERWORLD;
 					}
 					@Nullable ServerLevel destinationLevel = server.getLevel(respawnKey);
 					if (destinationLevel == null)
@@ -320,7 +340,7 @@ public final class DimensionManager implements InfiniverseAPI
 				final ResourceKey<LevelStem> oldKey = entry.getKey();
 				final ResourceKey<Level> oldLevelKey = ResourceKey.create(Registries.DIMENSION, oldKey.identifier());
 				final LevelStem dimension = entry.getValue();
-				if (oldKey != null && dimension != null && !removedLevelKeys.contains(oldLevelKey))
+				if (dimension != null && !removedLevelKeys.contains(oldLevelKey))
 				{
 					newRegistry.register(oldKey, dimension, oldRegistry.registrationInfo(oldKey).orElse(DIMENSION_REGISTRATION_INFO));
 				}

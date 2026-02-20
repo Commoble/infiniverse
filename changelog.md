@@ -1,3 +1,16 @@
+## 26.1.0.0
+* Updated to MC 26.1
+* Dimensions can again be created with per-dimension seeds
+	* This can be done by specifying the seed override in the LevelStem when using InfiniverseAPI#getOrCreateLevel
+* Added several commands, including several from the old infiniverse_utils mod:
+	* `/infiniverse copy_dimension <old_dimension_name: Dimension> <new_dimension_name: Dimension> [server_seed|copy_seed|random_seed|seed] [seed: String]`
+		* Copies a dimension, with a new seed if requested
+	* `/infiniverse remove <old_dimension_name: Dimension>`
+		* Removes a dimension from the server registry; region files remain on disk so it may be restored at a later time if necessary
+	* `infiniverse restore_missing_dimensions <world_preset: WorldPreset>`
+		* Adds any missing dimensions from a specified world preset. May be useful if the world_gen_settings.dat file becomes corrupted or preset dimensions are accidentally deleted.
+	
+
 ## 21.11.1
 * Add missing jar manifest attributes (fixes version not displaying in mods list)
 

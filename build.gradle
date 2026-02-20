@@ -26,7 +26,6 @@ java.toolchain.languageVersion = JavaLanguageVersion.of("${java_version}")
 sourceSets
 {
 	main
-	examplemod
 }
 
 //minecraft.accessTransformers.file rootProject.file('src/main/resources/META-INF/accesstransformer.cfg')
@@ -36,9 +35,6 @@ neoForge {
 	mods {
 		"${modid}" {
 			sourceSet(sourceSets.main)
-		}
-		"infiniverse_examplemod" {
-			sourceSet(sourceSets.examplemod)
 		}
 	}
 	runs {
@@ -61,11 +57,17 @@ neoForge {
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 configurations {
-	examplemodCompileClasspath.extendsFrom(compileClasspath)
-	examplemodRuntimeClasspath.extendsFrom(runtimeClasspath)
 }
 
 repositories {
+    maven {
+        name = "Maven for PR #2977" // https://github.com/neoforged/NeoForge/pull/2977
+        url = uri("https://prmaven.neoforged.net/NeoForge/pr2977")
+        content {
+            includeModule("net.neoforged", "neoforge")
+            includeModule("net.neoforged", "testframework")
+        }
+    }
 }
 
 dependencies {
