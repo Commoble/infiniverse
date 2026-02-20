@@ -71,7 +71,6 @@ repositories {
 }
 
 dependencies {
-	examplemodImplementation sourceSets.main.output
 }
 
 jar {
