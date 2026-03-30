@@ -1,5 +1,5 @@
 ## 26.1.0.0
-* Updated to MC 26.1
+* Updated to MC 26.1 (requires neoforge 26.1.0.17-beta or higher)
 * Dimensions can again be created with per-dimension seeds
 	* This can be done by specifying the seed override in the LevelStem when using InfiniverseAPI#getOrCreateLevel
 * Added several commands, including several from the old infiniverse_utils mod:
