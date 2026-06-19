@@ -1,3 +1,8 @@
+## 26.1.0.1
+* Fixed a crash that could occur when dimensions are unloaded.
+* Infiniverse no longer automatically saves levels before unloading them. Mods which were relying on this are recommended
+to wait for all chunks to unload before marking the level for unregistration.
+
 ## 26.1.0.0
 * Updated to MC 26.1 (requires neoforge 26.1.0.17-beta or higher)
 * Dimensions can again be created with per-dimension seeds

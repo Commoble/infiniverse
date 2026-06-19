@@ -123,7 +123,6 @@ public final class DimensionManager implements InfiniverseAPI
 			ServerLevel level = server.getLevel(levelToRemove);
 			if (level != null)
 			{
-				level.save(null, true, false);
 				levelsPendingUnregistration.add(levelToRemove);
 			}
 		}
