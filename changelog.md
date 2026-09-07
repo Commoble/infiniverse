@@ -1,3 +1,6 @@
+## 25.2.0.0
+* Updated to MC 26.2 / neoforge 26.2.0.81
+
 ## 26.1.0.1
 * Fixed a crash that could occur when dimensions are unloaded.
 * Infiniverse no longer automatically saves levels before unloading them. Mods which were relying on this are recommended
