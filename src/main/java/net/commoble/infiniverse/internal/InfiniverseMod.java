@@ -66,7 +66,7 @@ public final class InfiniverseMod
 
 	public static final CommonConfig COMMONCONFIG = Util.make(() -> {
 		final var entry = new ModConfigSpec.Builder().configure(CommonConfig::create);
-		ModList.get().getModContainerById(MODID).get().registerConfig(ModConfig.Type.COMMON, entry.getRight());
+		ModList.get().getModContainerById(MODID).get().registerConfig(ModConfig.Type.LOCAL, entry.getRight());
 		return entry.getLeft();
 	});
 	
