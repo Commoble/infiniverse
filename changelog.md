@@ -1,3 +1,8 @@
+## 26.3.0.2
+* Updated to neoforge 26.3.0.76
+* Dimensions can no longer be safely created immediately during level ticks due to neoforge changes
+* Added new API InfiniverseAPI#getOrRequestLevel which schedules a dimension for creation at the end of the tick if it doesn't already exist
+
 ## 26.3.0.1
 * Updated to MC 26.3 / neoforge 26.3.0.48-beta
 

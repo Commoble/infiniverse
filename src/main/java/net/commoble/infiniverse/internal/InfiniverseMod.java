@@ -56,6 +56,7 @@ import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 public final class InfiniverseMod
 {
 	public static final String MODID = "infiniverse";
+	
 	private static final String OLD_DIMENSION_NAME_ARG = "old_dimension_name";
 	private static final String NEW_DIMENSION_NAME_ARG = "new_dimension_name";
 	private static final String WORLD_PRESET_ARG = "world_preset";
@@ -144,7 +145,7 @@ public final class InfiniverseMod
 			
 			Supplier<LevelStem> dimensionFactory = ()-> new LevelStem(typeHolder, chunkGeneratorCopy, factory.createSeed(server, context, oldLevel));
 
-			InfiniverseAPI.get().getOrCreateLevel(server, newKey, dimensionFactory);
+			InfiniverseAPI.get().getOrRequestLevel(server, newKey, dimensionFactory);
 			
 			stack.sendSuccess(() -> Component.literal("Created dimension with id " + newID), false);
 			
@@ -152,7 +153,7 @@ public final class InfiniverseMod
 		};
 	}
 	
-	private ChunkGenerator copyChunkGenerator(MinecraftServer server, ServerLevel oldLevel) throws CommandSyntaxException
+	private static ChunkGenerator copyChunkGenerator(MinecraftServer server, ServerLevel oldLevel) throws CommandSyntaxException
 	{
 		// deep-copy the chunk generator (in case mods are storing state on them for some reason)
 		DynamicOps<Tag> ops = RegistryOps.create(NbtOps.INSTANCE, server.registryAccess());
@@ -225,7 +226,7 @@ public final class InfiniverseMod
 			if (server.getLevel(levelKey) == null)
 			{
 				LevelStem levelStem = entry.getValue();
-				InfiniverseAPI.get().getOrCreateLevel(server, levelKey, () -> levelStem);
+				InfiniverseAPI.get().getOrRequestLevel(server, levelKey, () -> levelStem);
 				context.getSource().sendSuccess(() -> Component.literal("Created dimension " + levelKey.identifier()), false);
 				created++;
 			}

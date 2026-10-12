@@ -8,15 +8,14 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Executor;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
-
-import javax.annotation.Nullable;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.jspecify.annotations.Nullable;
 
 import com.google.common.collect.Lists;
-import com.ibm.icu.impl.locale.XCldrStub.ImmutableSet;
 import com.mojang.serialization.Lifecycle;
 
 import net.commoble.infiniverse.api.InfiniverseAPI;
@@ -69,6 +68,7 @@ public final class DimensionManager implements InfiniverseAPI
 	private static final Logger LOGGER = LogManager.getLogger();
 	private static final Set<ResourceKey<Level>> VANILLA_LEVELS = Set.of(Level.OVERWORLD, Level.NETHER, Level.END);
 	
+	private Map<ResourceKey<Level>, LevelCreationStub> levelsPendingCreation = new HashMap<>();
 	private Set<ResourceKey<Level>> levelsPendingUnregistration = new HashSet<>();
 	
 	/**
@@ -82,21 +82,37 @@ public final class DimensionManager implements InfiniverseAPI
 	 * If this factory is used, it should be assumed that intended dimension has not been created or registered yet,
 	 * so making the factory attempt to get this dimension from the server's dimension registry will fail
 	 * @return Returns a ServerLevel, creating and registering a world and dimension for it if the world does not already exist
+	 * @deprecated May crash in neoforge 26.0.3.76+ if called during level tick, use {@link DimensionManager#getOrRequestLevel(MinecraftServer, ResourceKey, Supplier, Consumer)}
 	 */
+	@Deprecated(forRemoval=true)
 	public ServerLevel getOrCreateLevel(final MinecraftServer server, final ResourceKey<Level> levelKey, final Supplier<LevelStem> dimensionFactory)
 	{
-		// this is marked as deprecated but it's not called from anywhere and I'm not sure how old it is,
-		// it's probably left over from forge's previous dimension api
-		// in any case we need to get at the server's world field, and if we didn't use this getter,
-		// then we'd just end up making a private-field-getter for it ourselves anyway
-		@SuppressWarnings("deprecation")
-		Map<ResourceKey<Level>, ServerLevel> map = server.forgeGetWorldMap();
-		@Nullable ServerLevel existingLevel = map.get(levelKey);
+		@Nullable ServerLevel existingLevel = server.levels.get(levelKey);
 		
 		// if the world already exists, return it
 		return existingLevel == null
-			? createAndRegisterLevel(server, map, levelKey, dimensionFactory)
+			? createAndRegisterLevel(server, levelKey, dimensionFactory)
 			: existingLevel;
+	}
+
+	@Override
+	public @Nullable ServerLevel getOrRequestLevel(
+		MinecraftServer server,
+		ResourceKey<Level> levelKey,
+		Supplier<LevelStem> dimensionFactory,
+		Consumer<ServerLevel> onCreated)
+	{
+		Map<ResourceKey<Level>, ServerLevel> map = server.levels;
+		@Nullable ServerLevel existingLevel = map.get(levelKey);
+		if (existingLevel != null)
+		{
+			return existingLevel;
+		}
+		
+		// if not created, queue up callbacks
+		this.levelsPendingCreation.computeIfAbsent(levelKey, key -> new LevelCreationStub(dimensionFactory, onCreated));
+		
+		return null;
 	}
 	
 	/**
@@ -134,12 +150,13 @@ public final class DimensionManager implements InfiniverseAPI
 	 */
 	public Set<ResourceKey<Level>> getLevelsPendingUnregistration()
 	{
-		return ImmutableSet.copyOf(levelsPendingUnregistration);
+		return Set.copyOf(levelsPendingUnregistration);
 	}
 	
-	@SuppressWarnings("deprecation") // markWorldsDirty is deprecated, see below
-	private static ServerLevel createAndRegisterLevel(final MinecraftServer server, final Map<ResourceKey<Level>, ServerLevel> map, final ResourceKey<Level> levelKey, Supplier<LevelStem> dimensionFactory)
+	@SuppressWarnings("deprecation")
+	private static ServerLevel createAndRegisterLevel(final MinecraftServer server, final ResourceKey<Level> levelKey, Supplier<LevelStem> dimensionFactory)
 	{
+		final Map<ResourceKey<Level>, ServerLevel> map = server.levels;
 		// dimension keys have a 1:1 relationship with level keys, they have the same IDs as well
 		final ResourceKey<LevelStem> dimensionKey = ResourceKey.create(Registries.LEVEL_STEM, levelKey.identifier());
 		final LevelStem dimension = dimensionFactory.get();
@@ -203,9 +220,6 @@ public final class DimensionManager implements InfiniverseAPI
 		// register level
 		map.put(levelKey, newLevel);
 
-		// update forge's world cache so the new level can be ticked
-		server.markWorldsDirty();
-
 		// fire world load event
 		NeoForge.EVENT_BUS.post(new LevelEvent.Load(newLevel));
 
@@ -215,7 +229,6 @@ public final class DimensionManager implements InfiniverseAPI
 		return newLevel;
 	}
 	
-	@SuppressWarnings("deprecation")
 	private void unregisterScheduledDimensions(final MinecraftServer server)
 	{
 		if (this.levelsPendingUnregistration.isEmpty())
@@ -260,7 +273,6 @@ public final class DimensionManager implements InfiniverseAPI
 		}
 		
 		final Set<ResourceKey<Level>> removedLevelKeys = new HashSet<>();
-		final ServerLevel overworld = server.getLevel(Level.OVERWORLD);
 
 		for (final ResourceKey<Level> levelKeyToRemove : keysToRemove)
 		{
@@ -274,7 +286,7 @@ public final class DimensionManager implements InfiniverseAPI
 				continue;
 			
 			// null if specified level not present
-			final @Nullable ServerLevel removedLevel = server.forgeGetWorldMap().remove(levelKeyToRemove);
+			final @Nullable ServerLevel removedLevel = server.levels.remove(levelKeyToRemove);
 
 			if (removedLevel != null) // if we removed the key from the map
 			{
@@ -302,11 +314,9 @@ public final class DimensionManager implements InfiniverseAPI
 							player.setRespawnPosition(null, false);
 						}
 					}
-					@Nullable ServerLevel destinationLevel = server.getLevel(respawnKey);
-					if (destinationLevel == null)
-					{
-						destinationLevel = overworld;
-					}
+					@Nullable ServerLevel requestedDestinationLevel = server.getLevel(respawnKey);
+					ServerLevel destinationLevel = requestedDestinationLevel == null ? server.overworld() : requestedDestinationLevel;
+					
 
 					// "respawning" the player via the player list schedules a task in the server to
 					// run after the post-server tick
@@ -377,16 +387,34 @@ public final class DimensionManager implements InfiniverseAPI
 			ReflectionBuddy.LayeredRegistryAccessAccess.values.set(layeredRegistryAccess, List.copyOf(newRegistryAccessList));
 			ReflectionBuddy.ImmutableRegistryAccessAccess.registries.set(immutableRegistryAccess, newRegistryMap);
 			
-			// update the server's levels so dead levels don't get ticked
-			server.markWorldsDirty();
-			
 			// notify client of the removed levels
 			QuietPacketDistributors.sendToAll(server, new UpdateDimensionsPacket(removedLevelKeys, false));
 		}
 	}
 	
+	private void registerScheduledDimensions(MinecraftServer server) {
+		if (this.levelsPendingCreation.isEmpty()) {
+			return;
+		}
+		
+		Map<ResourceKey<Level>, LevelCreationStub> stubs = this.levelsPendingCreation;
+		this.levelsPendingCreation = new HashMap<>();
+		
+		for (var entry : stubs.entrySet()) {
+			ResourceKey<Level> levelKey = entry.getKey();
+			LevelCreationStub stub = entry.getValue();
+			ServerLevel newLevel = createAndRegisterLevel(server, levelKey, stub.dimensionFactory());
+			stub.onCreated.accept(newLevel);
+		}
+	}
+	
+	private static record LevelCreationStub(
+		Supplier<LevelStem> dimensionFactory,
+		Consumer<ServerLevel> onCreated) {
+	}
+	
 	@EventBusSubscriber(modid = InfiniverseMod.MODID)
-	private static class ForgeEventHandler
+	private static class EventHandler
 	{
 		@SubscribeEvent(priority=EventPriority.LOWEST)
 		public static void onServerTick(final ServerTickEvent.Post event)
@@ -395,6 +423,7 @@ public final class DimensionManager implements InfiniverseAPI
 			if (server != null)
 			{
 				DimensionManager.INSTANCE.unregisterScheduledDimensions(server);
+				DimensionManager.INSTANCE.registerScheduledDimensions(server);
 			}
 		}
 		
@@ -403,6 +432,7 @@ public final class DimensionManager implements InfiniverseAPI
 		{
 			// clear state on server exit (important for singleplayer worlds)
 			DimensionManager.INSTANCE.levelsPendingUnregistration = new HashSet<>();
+			DimensionManager.INSTANCE.levelsPendingCreation = new HashMap<>();
 		}
 	}
 }
